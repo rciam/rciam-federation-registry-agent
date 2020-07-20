@@ -20,7 +20,7 @@ We need to install the argo-ams-libray
 2. Initialize PullPublish
 ```
           from ServiceRegistryAms import PullPublish
-          with open("config.json") as json_data_file:
+            with open("config.json") as json_data_file:
           config = json.load(json_data_file)
           ams = PullPublish(config)
 ```
@@ -75,6 +75,7 @@ Messages have the following structure
 4. Publishing Deployment Updates
 
 To publish the deployment updates we use the ams.publish(args) function. The argument must follow the folliwing syntax.
+**Note: state can be "deployed" or "error" **
 
 ```
         args = [

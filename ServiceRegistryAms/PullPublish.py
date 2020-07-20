@@ -6,7 +6,6 @@ class PullPublish():
     def __init__(self,config):
         with open("config.json") as json_data_file:
             data = json.load(json_data_file)
-        # Create some member animals
         self.pull_sub = config['pull_sub']
         self.pub_topic = config['pub_topic']
         self.pull_topic = config['pull_topic']
