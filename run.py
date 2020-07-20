@@ -8,6 +8,7 @@ ams = PullPublish(config)
 s = sched.scheduler(time.time, time.sleep)
 def pull_push(sc):
     msgs = ams.pull(1)
+    print('msg={0}'.format(msgs))
     pub_msgs = []
     for msg in msgs:
         pub_msgs.append({'attributes':{},'data':{'id':msg['id'],'state':'deployed'}})
@@ -16,5 +17,3 @@ def pull_push(sc):
     s.enter(3, 1,pull_push, (sc,))
 s.enter(3, 1, pull_push, (s,))
 s.run()
-
-# Create an object of Birds class & call a method of it
