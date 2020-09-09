@@ -31,12 +31,11 @@ Using ams.pull() returns requested messages if available
           messages = ams.pull(number_of_desired_messages)
 ```
 
-Messages have the following structure
+Messages have the following structure: (first message is a oidc service and the seccond a saml)
 ```
           messages = [
             {
               'id': 5,
-              'entity_id': None,
               'protocol':'oidc',
               'client_id':'client5',
               'id_token_timeout_seconds': 600,
@@ -58,7 +57,6 @@ Messages have the following structure
               'logo_uri': 'https://logo.jpg',
               'redirect_uris': ['https://redirecturi.com'],
               'refresh_token_validity_seconds': 28800,
-              'metadata_url': None,
               'code_challenge_method':'plain',
               'policy_uri': 'https://policy_uri.com',
               'allow_introspection': True,
@@ -68,6 +66,29 @@ Messages have the following structure
               'grant_types': ['implicit'],
               'client_secret':'secret'  
             }
+            ,
+            {
+              id: 7,
+              service_name: 'Saml Service',
+              service_description: 'This is a saml service',
+              logo_uri: 'https://cdn.auth0.com/blog/duo-saml-exploit/saml.png',
+              policy_uri: 'https://policy_url.com',
+              integration_environment: 'production',
+              protocol: 'saml',
+              metadata_url: 'https://metadata_uri.com',
+              entity_id: 'entiry_id_uri',
+              deleted: false,
+              contacts: [{
+                  'type':'admin',
+                  'email': 'mygrail@gmail.com'
+                },
+                {
+                  'type':'admin',
+                  'email':'myfail@gmail.com'
+                }
+              ]
+            }
+
           ]
 ```
 
