@@ -2,6 +2,8 @@ from codecs import open
 from os import path
 from setuptools import setup, find_packages
 
+here = path.abspath(path.dirname(__file__))
+
 # get the dependencies and installs
 with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
@@ -13,7 +15,7 @@ setup(
     name='rciam-service-registry-agent',
     author='grnet',
     author_email='faai@grnet.gr',
-    version='1.0.0',
+    version='1.0.2',
     license='ASL 2.0',
     url='https://github.com/rciam/rciam-service-registry-agent',
     packages=find_packages(),
