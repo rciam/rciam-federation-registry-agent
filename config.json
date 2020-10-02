@@ -1,8 +1,11 @@
 {
   "host": "msg-devel.argo.grnet.gr",
   "project" : "rciam-service-registry",
-  "pull_topic" : "tasks",
-  "token" : "a7eee6262c719a466273e1b97a9946bbb980c694",
-  "pull_sub" : "service-deployer",
-  "pub_topic": "updates"
+  "pull_topic" : "egi-saml",
+  "token" : "",
+  "pull_sub" : "service-deployer-saml",
+  "pub_topic": "deployment-results",
+  "metadata": "metadata/file/path",
+  "metadata_key": "",
+  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php"
 }
