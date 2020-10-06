@@ -5,9 +5,13 @@ import subprocess
 import os
 import argparse
 import requests
+import logging
 from ServiceRegistryAms.PullPublish import PullPublish
 
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+
 def init_ams_agent(path):
+    logging.info('Init ams agent')
     with open(path) as json_data_file:
         config = json.load(json_data_file)
     return PullPublish(config)
@@ -22,6 +26,7 @@ This function will return the altered current state and new additions to it
 def update_data( registries, messages ):
     new_registries = []
     for msg in messages:
+        logging.info('Update service: ' + msg['id'])
         new_entry = True
         for registry in registries:
             if registry['registry_service_id'] == msg['id']:
@@ -44,6 +49,7 @@ php file with the updated state
     - path, which is the location of the config file
 '''
 def generate_config( registries, path ):
+    logging.info('Generate php ssp config file at ' + path)
     header = """<?php
 return array("""
     footer = """
@@ -72,19 +78,31 @@ if __name__ == '__main__':
     ams = init_ams_agent(path)
     with open(path) as json_data_file:
         config = json.load(json_data_file)
-
     # Get current registries
+    logging.info('Read existing metadata file at ' + config['metadata'])
     registries_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+config['metadata']+'");'], universal_newlines=True, stdout=subprocess.PIPE)
     registries_json = json.loads(registries_data.stdout)
+    if not isinstance(registries_json, list):
+        logging.error('Cannot read metadata php file')
+        exit(1)
     
     # Get messages
+    logging.info('Pull messages from ams')
     messages = ams.pull(1)
+    logging.info('Received ' + str(len(messages)) +' messages from ams')
     messages_counter = len(messages)
     while len(messages)>0:
         registries_json = update_data(registries_json, messages)
+        logging.info('Pull messages from ams')
         messages = ams.pull(1)
+        logging.info('Received ' + str(len(messages)) +' messages from ams')
         messages_counter += len(messages)
+
     if messages_counter > 0:
         generate_config(registries_json, config['metadata'])
+        logging.info('Run sync http request to ' + config['ssp_url'])
         payload = {'key': config['metadata_key'], 'tag': 'hourly'}
         requests.get(config['ssp_url'], params = payload)
+    else:
+        logging.info('No updates for services metadata file')
+    logging.info('Exit script')
