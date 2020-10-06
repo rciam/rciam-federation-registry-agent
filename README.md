@@ -19,6 +19,7 @@ pip install rciam-service-registry-agent
 ## Usage
 
 
+First create a config file like the example bellow
 example.config.json
 ```javascript
 {
