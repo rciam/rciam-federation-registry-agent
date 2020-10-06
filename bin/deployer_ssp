@@ -14,49 +14,48 @@ def init_ams_agent(path):
 
 '''
 This function will return the altered current state and new additions to it
-    update_data gets 2 arguments:
-    
-    - registries, which represents the current state in json
+    Function update_data gets 2 arguments:
+    - services, current state included in the php metadata file in json
     - messages, the new incoming messages in json
 '''
-def update_data( registries, messages ):
-    new_registries = []
+def update_data( services, messages ):
+    new_services = []
     for msg in messages:
         new_entry = True
-        for registry in registries:
-            if registry['registry_service_id'] == msg['id']:
+        for service in services:
+            if service['registry_service_id'] == msg['id']:
                 new_entry = False
                 if msg['deleted'] == False:      
-                    registry['whitelist'] = [ msg['entity_id'] ]
-                    registry['src'] = msg['metadata_url']
+                    service['whitelist'] = [ msg['entity_id'] ]
+                    service['src'] = msg['metadata_url']
                 else:
-                    registries.remove(registry)
+                    services.remove(service)
                 break
         if new_entry == True and msg['deleted'] == False:
-            new_registries.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
-    return registries + new_registries
+            new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
+    return services + new_services
 
 '''
 This function get the current state and will generate a configuration
 php file with the updated state
     generate_config gets 2 arguments:
-    - registries, which represents the current state in json
+    - services, which represents the current state in json
     - path, which is the location of the config file
 '''
-def generate_config( registries, path ):
+def generate_config( services, path ):
     header = """<?php
 return array("""
     footer = """
 );"""
     content = ""
-    for registry in registries:
+    for service in services:
         content += """
     array(
-        'registry_service_id' => """ + str(registry['registry_service_id']) + """,
+        'registry_service_id' => """ + str(service['registry_service_id']) + """,
         'whitelist' => array (
-            '"""+ str(registry['whitelist'][0])  +"""',
+            '"""+ str(service['whitelist'][0])  +"""',
         ),
-        'src' => '""" + str(registry['src']) + """',
+        'src' => '""" + str(service['src']) + """',
     ),"""
     f = open(path,"w")
     f.write(header+content+footer)
@@ -73,18 +72,18 @@ if __name__ == '__main__':
     with open(path) as json_data_file:
         config = json.load(json_data_file)
 
-    # Get current registries
-    registries_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+config['metadata']+'");'], universal_newlines=True, stdout=subprocess.PIPE)
-    registries_json = json.loads(registries_data.stdout)
+    # Get current services
+    services_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+config['metadata']+'");'], universal_newlines=True, stdout=subprocess.PIPE)
+    services_json = json.loads(services_data.stdout)
     
     # Get messages
     messages = ams.pull(1)
     messages_counter = len(messages)
     while len(messages)>0:
-        registries_json = update_data(registries_json, messages)
+        services_json = update_data(services_json, messages)
         messages = ams.pull(1)
         messages_counter += len(messages)
     if messages_counter > 0:
-        generate_config(registries_json, config['metadata'])
+        generate_config(services_json, config['metadata'])
         payload = {'key': config['metadata_key'], 'tag': 'hourly'}
         requests.get(config['ssp_url'], params = payload)
