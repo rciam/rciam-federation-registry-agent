@@ -5,7 +5,8 @@
   "token" : "",
   "pull_sub" : "service-deployer-saml",
   "pub_topic": "deployment-results",
-  "metadata": "metadata/file/path",
+  "metadata": "./conf/test.php",
   "metadata_key": "",
-  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php"
+  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php",
+  "log_conf": "./conf/logger.conf"
 }
