@@ -12,12 +12,12 @@ install_requires = [x.strip() for x in all_reqs if 'git+' not in x]
 dependency_links = [x.strip().replace('git+', '') for x in all_reqs if x.startswith('git+')]
 
 setup(
-    name='rciam-service-registry-agent',
+    name='rciam-federation-registry-agent',
     author='grnet',
     author_email='faai@grnet.gr',
     version='1.0.2',
     license='ASL 2.0',
-    url='https://github.com/rciam/rciam-service-registry-agent',
+    url='https://github.com/rciam/rciam-federation-registry-agent',
     packages=find_packages(),
     scripts=['bin/deployer_ssp'],
     zip_safe=False,

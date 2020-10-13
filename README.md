@@ -1,6 +1,6 @@
-# rciam-service-registry-agent
+# rciam-federation-registry-agent
 
-***Rciam service registry agent*** is a python library that includes a module at `ServiceRegistryAms/` to pull and publish messages from Argo messaging service using the argo-ams-library.
+***Rciam federation registry agent*** is a python library that includes a module at `ServiceRegistryAms/` to pull and publish messages from Argo messaging service using the argo-ams-library.
 Also it includes standalone scripts under `bin/` that are used to deploy updates to third party services that rciam registry need to inform such as:
 * `deployer_ssp` for simple sampl php.
 
@@ -11,9 +11,9 @@ First install the pachages from the requirements.txt file
 pip install -r requirements.txt
 ```
 
-Install rciam-service-registy-agent
+Install rciam-federation-registy-agent
 ```bash
-pip install rciam-service-registry-agent
+pip install rciam-federation-registry-agent
 ```
 
 ## Usage
