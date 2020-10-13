@@ -1,10 +1,10 @@
 pipeline {
     agent any
     options {
-        checkoutToSubdirectory('rciam-service-registry-agent')
+        checkoutToSubdirectory('rciam-federation-registry-agent')
     }
     environment {
-        PROJECT_DIR="rciam-service-registry-agent"
+        PROJECT_DIR="rciam-federation-registry-agent"
     }
     stages {
         stage ('Upload to PyPI') {
