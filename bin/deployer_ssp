@@ -88,7 +88,7 @@ if __name__ == '__main__':
     log.info('Read existing metadata file at ' + config['metadata'])
     services_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+config['metadata']+'");'], universal_newlines=True, stdout=subprocess.PIPE)
     services_json = json.loads(services_data.stdout)
-    if not isinstance(registries_json, list):
+    if not isinstance(services_json, list):
         log.error('Cannot read metadata php file')
         exit(1)
     
