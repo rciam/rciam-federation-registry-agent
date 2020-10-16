@@ -1,0 +1,11 @@
+{
+  "host": "example.host.com",
+  "project" : "ams-project-name",
+  "pull_topic" : "ams-topic",
+  "pull_sub" : "ams-sub",
+  "token" : "ams-token",
+  "pub_topic": "ams-publish-topic",
+  "metadata": "/path/to/ssp/metadata/file.php",
+  "metadata_key": "ssp-metadata-key",
+  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php"
+}
