@@ -1,0 +1,16 @@
+Metadata-Version: 1.1
+Name: rciam-federation-registry-agent
+Version: 1.0.2
+Summary: A library that connects to ams using argo-ams-library and syncs with mitrID and ssp
+Home-page: https://github.com/rciam/rciam-federation-registry-agent
+Author: grnet
+Author-email: faai@grnet.gr
+License: ASL 2.0
+Description: UNKNOWN
+Platform: UNKNOWN
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Programming Language :: PHP
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 3.5
+Classifier: Programming Language :: Python :: 3.6
+Classifier: Programming Language :: Python :: 3.7

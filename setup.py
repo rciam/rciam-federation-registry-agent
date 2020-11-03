@@ -19,7 +19,7 @@ setup(
     license='ASL 2.0',
     url='https://github.com/rciam/rciam-federation-registry-agent',
     packages=find_packages(),
-    scripts=['bin/deployer_ssp'],
+    scripts=['bin/deployer_ssp','bin/deployer_mitreid'],
     zip_safe=False,
     install_requires=install_requires,
     dependency_links=dependency_links,

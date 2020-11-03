@@ -2,10 +2,13 @@
   "host": "example.host.com",
   "project" : "ams-project-name",
   "pull_topic" : "ams-topic",
-  "pull_sub" : "ams-sub",
   "token" : "ams-token",
+  "pull_sub" : "ams-sub",
+  "agent_id": "pull-sub-agent-id",
   "pub_topic": "ams-publish-topic",
-  "metadata": "/path/to/ssp/metadata/file.php",
-  "metadata_key": "ssp-metadata-key",
-  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php"
+  "log_conf": "conf/logger.conf",
+  "mitreid_url": "https://mitreid.host" ,
+  "mitreid_refresh_token": "token",
+  "mitreid_client_id": "clientId",
+  "mitreid_client_secret": "secret"
 }
