@@ -15,15 +15,13 @@ pipeline {
             }
             steps {
                 echo 'Build python package'
-                sh '''
-                    cd ${WORKSPACE}/$PROJECT_DIR
-                    pipenv pip install setuptools twine wheel
-                    pipenv run python3 setup.py sdist bdist_wheel
-                '''
                 script {
                     if ( env.BRANCH_NAME == 'master' ) {
                         withCredentials(bindings: [usernamePassword(credentialsId: 'rciam-pypi-token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                             sh '''
+                                cd ${WORKSPACE}/$PROJECT_DIR
+                                pipenv install --python 3 setuptools twine wheel
+                                pipenv run python3 setup.py sdist bdist_wheel
                                 pipenv run python3 -m twine upload -u $USERNAME -p $PASSWORD dist/*
                             '''
                         }
@@ -31,12 +29,14 @@ pipeline {
                     if ( env.BRANCH_NAME == 'devel' ) {
                         withCredentials(bindings: [usernamePassword(credentialsId: 'rciam-test-pypi-token', usernameVariable: 'USERNAME', passwordVariable: 'PASSWORD')]) {
                             sh '''
+                                cd ${WORKSPACE}/$PROJECT_DIR
+                                pipenv install --python 3 setuptools twine wheel
+                                pipenv run python3 setup.py sdist bdist_wheel
                                 pipenv run python3 -m twine upload --repository testpypi -u $USERNAME -p $PASSWORD dist/*
                             '''
                         }
                     }
                 }
-                
             }
             post {
                 always {

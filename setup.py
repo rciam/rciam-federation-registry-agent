@@ -4,6 +4,10 @@ from setuptools import setup, find_packages
 
 here = path.abspath(path.dirname(__file__))
 
+# Get the long description from the README file
+with open(path.join(here, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
+
 # get the dependencies and installs
 with open(path.join(here, 'requirements.txt'), encoding='utf-8') as f:
     all_reqs = f.read().split('\n')
@@ -15,7 +19,7 @@ setup(
     name='rciam-federation-registry-agent',
     author='grnet',
     author_email='faai@grnet.gr',
-    version='1.0.2',
+    version='1.0.3',
     license='ASL 2.0',
     url='https://github.com/rciam/rciam-federation-registry-agent',
     packages=find_packages(),
@@ -24,6 +28,7 @@ setup(
     install_requires=install_requires,
     dependency_links=dependency_links,
     description='A library that connects to ams using argo-ams-library and syncs with mitrID and ssp',
+    long_description = long_description,
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
         'Programming Language :: PHP',
