@@ -39,7 +39,7 @@ def format_mitreid_msg(msg):
     return msgNew
 
 '''
-format_ams_msg gets the response from mitreID in camelCase format
+format_ams_msg gets the response from mitreID in camelCase format, keeps the needed fields
 and modifies it in snake_case to be accepted from ams - rciam-federation-recistry
 '''
 def format_ams_msg(msg, client_id, agent_id, status):
@@ -73,12 +73,15 @@ def update_data(messages, issuer_url, refresh_token, client_id, client_secret, a
         current_id = msg.pop('id') # Remove rciam service id to make request to mitreId
         format_msg = format_mitreid_msg(msg) # Format message in camelCase for mitreId
         response = {}
-        if 'externalId' not in format_msg:  # externalId value should be empty if service is no
+        if format_msg['delete'] == True:
+            log.info('Delete client with id: ' + str(msg['external_id']))
+            response = mitreid_agent.deleteClientById(msg['external_id'])
+        elif 'externalId' not in format_msg:  # externalId value should be empty if service is no
             log.info('Create new client')
             response = mitreid_agent.createClient(format_msg)
         else:
             log.info('Update client with id: ' + str(msg['external_id']))
-            response = mitreid_agent.updateClientById(format_msg, msg['external_id'])
+            response = mitreid_agent.updateClientById(msg['external_id'],format_msg)
 
         if response is None:
             ams_message = format_ams_msg(format_msg,current_id,agent_id,False)
