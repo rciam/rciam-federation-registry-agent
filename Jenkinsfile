@@ -17,7 +17,7 @@ pipeline {
                 echo 'Build python package'
                 sh '''
                     cd ${WORKSPACE}/$PROJECT_DIR
-                    pipenv install install setuptools twine wheel
+                    pipenv pip install setuptools twine wheel
                     pipenv run python3 setup.py sdist bdist_wheel
                 '''
                 script {
@@ -48,6 +48,20 @@ pipeline {
     post {
         always {
             cleanWs()
+        }
+        success {
+            script{
+                if ( env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'devel' ) {
+                    slackSend( channel: "aai-federation-registry", message: ":rocket: New version for <$BUILD_URL|$PROJECT_DIR>:$BRANCH_NAME Job: $JOB_NAME !")
+                }
+            }
+        }
+        failure {
+            script{
+                if ( env.BRANCH_NAME == 'master' || env.BRANCH_NAME == 'devel' ) {
+                    slackSend( channel: "aai-federation-registry", message: ":rain_cloud: Build Failed for <$BUILD_URL|$PROJECT_DIR>:$BRANCH_NAME Job: $JOB_NAME")
+                }
+            }
         }
     }
 }
