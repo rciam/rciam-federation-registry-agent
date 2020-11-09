@@ -1,3 +1,0 @@
-MitreidConnect
-ServiceRegistryAms
-Utils

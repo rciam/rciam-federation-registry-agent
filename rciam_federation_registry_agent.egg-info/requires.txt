@@ -1,7 +1,0 @@
-argo-ams-library
-certifi
-chardet
-idna
-requests
-urllib3
-requests-oauthlib
