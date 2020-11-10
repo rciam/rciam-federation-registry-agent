@@ -1,12 +1,8 @@
 #!/usr/bin/env python3
 
-import json, sched, time
-import subprocess
-import os
+import json, time
 import argparse
-import requests
 import logging
-import re
 from common import get_log_conf
 from ServiceRegistryAms.PullPublish import PullPublish
 from MitreidConnect.MitreidClientApi import mitreidClientApi
@@ -107,20 +103,11 @@ if __name__ == '__main__':
     ams = init_ams_agent(path)
     
     # Get messages
-    log.info('Pull messages from ams')
-    messages = ams.pull(1)
-    log.info('Received ' + str(len(messages)) +' messages from ams')
-    messages_counter = len(messages)
-    while len(messages)>0:
-        update_data(messages,config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'],config['mitreid_client_secret'], config['agent_id'])
+    while True:
         log.info('Pull messages from ams')
         messages = ams.pull(1)
-        messages = []
         log.info('Received ' + str(len(messages)) +' messages from ams')
-        messages_counter += len(messages)
+        update_data(messages, config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'],config['mitreid_client_secret'], config['agent_id'])
+        time.sleep(config['time_interval'])
 
-    if messages_counter > 0:
-        log.info(str(messages_counter) + ' messages received and deployed to mitreID')
-    else:
-        log.info('No updates for mitreID')
     log.info('Exit script')

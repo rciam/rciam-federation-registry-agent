@@ -10,5 +10,6 @@
   "mitreid_url": "https://mitreid.host" ,
   "mitreid_refresh_token": "token",
   "mitreid_client_id": "clientId",
-  "mitreid_client_secret": "secret"
+  "mitreid_client_secret": "secret",
+  "time_interval": 1
 }
