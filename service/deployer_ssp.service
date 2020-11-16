@@ -1,0 +1,11 @@
+[Unit]
+Description=Satosa deployer service
+
+[Service]
+User=root
+ExecStart={{venv_path}/deployer_ssp -c /etc/conf/deployer_ssp.config 
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target

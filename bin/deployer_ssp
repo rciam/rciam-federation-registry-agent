@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import json, sched, time
+import json, time
 import subprocess
-import os
 import argparse
 import requests
 import logging
@@ -93,22 +92,16 @@ if __name__ == '__main__':
         exit(1)
     
     # Get messages
-    log.info('Pull messages from ams')
-    messages = ams.pull(1)
-    log.info('Received ' + str(len(messages)) +' messages from ams')
-    messages_counter = len(messages)
-    while len(messages)>0:
-        services_json = update_data(services_json, messages)
+    while True:
         log.info('Pull messages from ams')
         messages = ams.pull(1)
         log.info('Received ' + str(len(messages)) +' messages from ams')
-        messages_counter += len(messages)
+        if len(messages)>0:
+            services_json = update_data(services_json, messages)
+            generate_config(services_json, config['metadata'])
+            log.info('Run sync http request to ' + config['ssp_url'])
+            payload = {'key': config['metadata_key'], 'tag': 'hourly'}
+            requests.get(config['ssp_url'], params = payload)
+        time.sleep(config['time_interval'])
 
-    if messages_counter > 0:
-        generate_config(services_json, config['metadata'])
-        log.info('Run sync http request to ' + config['ssp_url'])
-        payload = {'key': config['metadata_key'], 'tag': 'hourly'}
-        requests.get(config['ssp_url'], params = payload)
-    else:
-        log.info('No updates for services metadata file')
     log.info('Exit script')

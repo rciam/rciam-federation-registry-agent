@@ -7,5 +7,6 @@
   "pub_topic": "ams-publish-topic",
   "metadata": "/path/to/ssp/metadata/file.php",
   "metadata_key": "ssp-metadata-key",
-  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php"
+  "ssp_url": "http://localhost/proxy/module.php/cron/cron.php",
+  "time_interval": 1
 }

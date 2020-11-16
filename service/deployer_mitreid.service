@@ -1,0 +1,11 @@
+[Unit]
+Description=MitreId deployer service
+
+[Service]
+User=root
+ExecStart={{venv_path}/deployer_mitreid -c /etc/conf/deployer_mitreid.config 
+Restart=always
+Type=simple
+
+[Install]
+WantedBy=multi-user.target
