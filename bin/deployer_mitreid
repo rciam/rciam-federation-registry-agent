@@ -39,10 +39,11 @@ def format_mitreid_msg(msg):
 
 # create_ams_response creates a json object with the result of the mitreId api call
 # that is readable from the rciam-federation-registry
-def create_ams_response(response, service_id, agent_id):
+def create_ams_response(response, service_id, agent_id, external_id):
     msgNew = {}
     msgNew['id'] = service_id
     msgNew['agent_id'] = agent_id
+    msgNew['external_id'] = external_id
     if response is None:
         msgNew['state'] = "error"
     else:
@@ -67,24 +68,29 @@ def update_data(messages, issuer_url, refresh_token, client_id, client_secret, a
 
         service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
         mitreid_msg = format_mitreid_msg(msg)    # Format message in camelCase for mitreId
-
+        external_id = 0
         log.debug('Formated message for mitreId: ' + str(mitreid_msg))
         response = {}
-
-        if 'externalId' not in mitreid_msg:  # externalId value should be empty if service is no
-            log.info('Create new client')
-            response = mitreid_agent.createClient(mitreid_msg)
-        else:
-            external_id = mitreid_msg['externalId']
-            if mitreid_msg['deleted'] == True:
-                log.info('Delete client with id: ' + str(external_id))
-                response = mitreid_agent.deleteClientById(external_id)
+        try:
+            if 'externalId' not in mitreid_msg:  # externalId value should be empty if service is no
+                log.info('Create new client')
+                response = mitreid_agent.createClient(mitreid_msg)
+                if 'id' in response:
+                    external_id = response['id'] # response['id'] from mitre API is the external id
             else:
-                log.info('Update client with id: ' + str(external_id))
-                response = mitreid_agent.updateClientById(external_id, mitreid_msg)
-        log.info('Message received from mitreId: ' + str(response))
+                external_id = mitreid_msg['externalId']
+                if mitreid_msg['deleted'] == True:
+                    log.info('Delete client with id: ' + str(external_id))
+                    response = mitreid_agent.deleteClientById(external_id)
+                else:
+                    log.info('Update client with id: ' + str(external_id))
+                    response = mitreid_agent.updateClientById(external_id, mitreid_msg)
+            log.info('Message received from mitreId: ' + str(response))
+            ams_message = create_ams_response(response, service_id, agent_id, external_id)
+        except:
+            log.critical('Exception catch, return error to ams')
+            ams_message = create_ams_response(None, service_id, agent_id, external_id)
 
-        ams_message = create_ams_response(response, service_id, agent_id)
         pub_messages.append({'attributes':{},'data':ams_message})
     if len(pub_messages)>0:
         log.info('Publish messaged to ams')
