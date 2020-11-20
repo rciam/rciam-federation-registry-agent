@@ -94,7 +94,8 @@ if __name__ == '__main__':
     # Get messages
     while True:
         log.info('Pull messages from ams')
-        messages = ams.pull(1)
+        messages, ids = ams.pull(1)
+        ams.ack(ids)
         log.info('Received ' + str(len(messages)) +' messages from ams')
         if len(messages)>0:
             services_json = update_data(services_json, messages)

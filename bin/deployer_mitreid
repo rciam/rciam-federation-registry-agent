@@ -43,7 +43,8 @@ def create_ams_response(response, service_id, agent_id, external_id):
     msgNew = {}
     msgNew['id'] = service_id
     msgNew['agent_id'] = agent_id
-    msgNew['external_id'] = external_id
+    if external_id>0:
+        msgNew['external_id'] = external_id
     if response is None:
         msgNew['state'] = "error"
     else:
@@ -56,19 +57,17 @@ def create_ams_response(response, service_id, agent_id, external_id):
 #    Function update_data gets 3 arguments:
 #    - messages, the new incoming messages in json
 #    - issuer_url, the url of the issuer
-#    - refresh_token
-def update_data(messages, issuer_url, refresh_token, client_id, client_secret, agent_id):
+#    - access_token
+#    - agent_id
+def update_data(messages, issuer_url, access_token, agent_id):
     pub_messages = [] # messages to be published
+    mitreid_agent = mitreidClientApi(issuer_url, access_token) # Create mitreid agent
     for msg in messages:
         log.debug('Message from ams: ' + str(msg))
-        log.info('Get access token from ' + issuer_url)
-
-        access_token = refreshTokenGrant(issuer_url, refresh_token, client_id, client_secret)
-        mitreid_agent = mitreidClientApi(issuer_url, access_token)
 
         service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
+        external_id = -1
         mitreid_msg = format_mitreid_msg(msg)    # Format message in camelCase for mitreId
-        external_id = 0
         log.debug('Formated message for mitreId: ' + str(mitreid_msg))
         response = {}
         try:
@@ -113,8 +112,17 @@ if __name__ == '__main__':
     # Get messages
     while True:
         log.info('Pull messages from ams')
-        messages = ams.pull(1)
+        messages, ids = ams.pull(1)
         log.info('Received ' + str(len(messages)) +' messages from ams')
-        update_data(messages, config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'],config['mitreid_client_secret'], config['agent_id'])
+        if len(messages) > 0:
+            access_token = ''
+            try:
+                log.info('Get access token from ' + config['mitreid_url'])
+                access_token = refreshTokenGrant(config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'], config['mitreid_client_secret'])
+                ams.ack(ids)
+            except:
+                log.critical('Failed to get access token')
+                raise SystemExit(1)
+            update_data(messages, config['mitreid_url'], access_token, config['agent_id'])
         time.sleep(config['time_interval'])
     log.info('Exit script')
