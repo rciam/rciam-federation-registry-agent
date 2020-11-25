@@ -8,18 +8,20 @@ from ServiceRegistryAms.PullPublish import PullPublish
 from MitreidConnect.MitreidClientApi import mitreidClientApi
 from Utils.oauth import refreshTokenGrant
 
+# Setup logger
 log = logging.getLogger(__name__)
 
+
+# Initialize ams agent
 def init_ams_agent(path):
     log.info('Init ams agent')
     with open(path) as json_data_file:
         config = json.load(json_data_file)
     return PullPublish(config)
 
-'''
-format_mitreid_msg gets a message from ams rciam-federation in snake_case
-and modifies it in camelCase format to be accepted from mitreID
-'''
+
+# format_mitreid_msg gets a message from ams rciam-federation in snake_case
+# and modifies it to camelCase format to be acceptable from mitreID API
 def format_mitreid_msg(msg):
     msgNew = {}
     emails=[]
@@ -34,61 +36,66 @@ def format_mitreid_msg(msg):
     msgNew['clientDescription'] = msgNew.pop('serviceDescription')
     return msgNew
 
-'''
-format_ams_msg gets the response from mitreID in camelCase format, keeps the needed fields
-and modifies it in snake_case to be accepted from ams - rciam-federation-recistry
-'''
-def format_ams_msg(msg, client_id, agent_id, status):
+
+# create_ams_response creates a json object with the result of the mitreId api call
+# that is readable from the rciam-federation-registry
+def create_ams_response(response, service_id, agent_id, external_id):
     msgNew = {}
-    msgNew['id'] = client_id
-    msgNew['client_id'] = msg['clientId']
+    msgNew['id'] = service_id
     msgNew['agent_id'] = agent_id
-    if status == True:
-        msgNew['state'] = "deployed"
-        msgNew['external_id'] = msg['id']
-    else:
+    if external_id>0:
+        msgNew['external_id'] = external_id
+    if response is None:
         msgNew['state'] = "error"
+    else:
+        msgNew['state'] = "deployed"
     return  msgNew
 
-'''
-This function will gain an access token from the provided issuer and it will
-make a POST request using mitreidClient to update or create the client
-    Function update_data gets 3 arguments:
-    - messages, the new incoming messages in json
-    - issuer_url, the url of the issuer
-    - refresh_token
-'''
-def update_data(messages, issuer_url, refresh_token, client_id, client_secret, agent_id):
+
+# This function will gain an access token from the provided issuer and it will
+# make a POST request using mitreidClient to update or create the client
+#    Function update_data gets 3 arguments:
+#    - messages, the new incoming messages in json
+#    - issuer_url, the url of the issuer
+#    - access_token
+#    - agent_id
+def update_data(messages, issuer_url, access_token, agent_id):
     pub_messages = [] # messages to be published
+    mitreid_agent = mitreidClientApi(issuer_url, access_token) # Create mitreid agent
     for msg in messages:
+        log.debug('Message from ams: ' + str(msg))
 
-        log.info('Get access token from ' + issuer_url)
-        access_token = refreshTokenGrant(issuer_url, refresh_token, client_id, client_secret)
-        mitreid_agent = mitreidClientApi(issuer_url, access_token)
-
-        current_id = msg.pop('id') # Remove rciam service id to make request to mitreId
-        format_msg = format_mitreid_msg(msg) # Format message in camelCase for mitreId
+        service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
+        external_id = -1
+        mitreid_msg = format_mitreid_msg(msg)    # Format message in camelCase for mitreId
+        log.debug('Formated message for mitreId: ' + str(mitreid_msg))
         response = {}
-        if format_msg['delete'] == True:
-            log.info('Delete client with id: ' + str(msg['external_id']))
-            response = mitreid_agent.deleteClientById(msg['external_id'])
-        elif 'externalId' not in format_msg:  # externalId value should be empty if service is no
-            log.info('Create new client')
-            response = mitreid_agent.createClient(format_msg)
-        else:
-            log.info('Update client with id: ' + str(msg['external_id']))
-            response = mitreid_agent.updateClientById(msg['external_id'],format_msg)
-
-        if response is None:
-            ams_message = format_ams_msg(format_msg,current_id,agent_id,False)
-        else:
-            ams_message = format_ams_msg(response,current_id,agent_id,True)
+        try:
+            if 'externalId' not in mitreid_msg:  # externalId value should be empty if service is no
+                log.info('Create new client')
+                response = mitreid_agent.createClient(mitreid_msg)
+                if 'id' in response:
+                    external_id = response['id'] # response['id'] from mitre API is the external id
+            else:
+                external_id = mitreid_msg['externalId']
+                if mitreid_msg['deleted'] == True:
+                    log.info('Delete client with id: ' + str(external_id))
+                    response = mitreid_agent.deleteClientById(external_id)
+                else:
+                    log.info('Update client with id: ' + str(external_id))
+                    response = mitreid_agent.updateClientById(external_id, mitreid_msg)
+            log.info('Message received from mitreId: ' + str(response))
+            ams_message = create_ams_response(response, service_id, agent_id, external_id)
+        except:
+            log.critical('Exception catch, return error to ams')
+            ams_message = create_ams_response(None, service_id, agent_id, external_id)
 
         pub_messages.append({'attributes':{},'data':ams_message})
     if len(pub_messages)>0:
-        log.info('Publish message to ams for client : ' + str(format_msg['clientId']))
-        print(pub_messages)
+        log.info('Publish messaged to ams')
+        log.debug('Messages published to ams: ' + str(pub_messages))
         ams.publish(pub_messages)
+
 
 if __name__ == '__main__':
     # Get config path from arguments
@@ -105,9 +112,17 @@ if __name__ == '__main__':
     # Get messages
     while True:
         log.info('Pull messages from ams')
-        messages = ams.pull(1)
+        messages, ids = ams.pull(1)
         log.info('Received ' + str(len(messages)) +' messages from ams')
-        update_data(messages, config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'],config['mitreid_client_secret'], config['agent_id'])
+        if len(messages) > 0:
+            access_token = ''
+            try:
+                log.info('Get access token from ' + config['mitreid_url'])
+                access_token = refreshTokenGrant(config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'], config['mitreid_client_secret'])
+                ams.ack(ids)
+            except:
+                log.critical('Failed to get access token')
+                raise SystemExit(1)
+            update_data(messages, config['mitreid_url'], access_token, config['agent_id'])
         time.sleep(config['time_interval'])
-
     log.info('Exit script')

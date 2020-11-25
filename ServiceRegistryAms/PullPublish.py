@@ -29,13 +29,14 @@ class PullPublish():
             messages.append(json.loads(data))
             #print('msgid={0}, data={1}, attr={2}'.format(msgid, data, attr))
             ackids.append(id)
+        return messages, ackids
 
+    def ack(self,ackids):
         # pass list of extracted ackIds to AMS Service so that
         # it can move the offset for the next subscription pull
         # (basically acknowledging pulled messages)
         if ackids:
             self.ams.ack_sub(self.pull_sub, ackids)
-        return messages
 
     def publish(self,messages):
         # messages = [{data:[{id:1},{state:'deployed'}],attributes=''}]
