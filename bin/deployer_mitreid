@@ -64,37 +64,43 @@ def update_data(messages, issuer_url, access_token, agent_id):
     mitreid_agent = mitreidClientApi(issuer_url, access_token) # Create mitreid agent
     for msg in messages:
         log.debug('Message from ams: ' + str(msg))
-
         service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
         external_id = -1
-        mitreid_msg = format_mitreid_msg(msg)    # Format message in camelCase for mitreId
-        log.debug('Formated message for mitreId: ' + str(mitreid_msg))
-        response = {}
         try:
-            if 'externalId' not in mitreid_msg:  # externalId value should be empty if service is no
-                log.info('Create new client')
-                response = mitreid_agent.createClient(mitreid_msg)
-                if 'id' in response:
-                    external_id = response['id'] # response['id'] from mitre API is the external id
-            else:
-                external_id = mitreid_msg['externalId']
-                if mitreid_msg['deleted'] == True:
-                    log.info('Delete client with id: ' + str(external_id))
-                    response = mitreid_agent.deleteClientById(external_id)
-                else:
-                    log.info('Update client with id: ' + str(external_id))
-                    response = mitreid_agent.updateClientById(external_id, mitreid_msg)
+            response , external_id = call_mitreid(msg, mitreid_agent)
             log.info('Message received from mitreId: ' + str(response))
             ams_message = create_ams_response(response, service_id, agent_id, external_id)
         except:
             log.critical('Exception catch, return error to ams')
             ams_message = create_ams_response(None, service_id, agent_id, external_id)
-
         pub_messages.append({'attributes':{},'data':ams_message})
+    return pub_messages
+
+def publish_ams(pub_messages, ams_agent):
     if len(pub_messages)>0:
         log.info('Publish messaged to ams')
         log.debug('Messages published to ams: ' + str(pub_messages))
-        ams.publish(pub_messages)
+        ams_agent.publish(pub_messages)
+
+def call_mitreid(registry_message,mitreid_agent):
+    deployment_type = registry_message.pop('deployment_type')
+    mitreid_msg = format_mitreid_msg(registry_message)
+    log.debug('Formated message for mitreId: ' + str(mitreid_msg))
+    response = {}
+    external_id = -1
+    if deployment_type == 'create':
+        log.info('Create new client')
+        response = mitreid_agent.createClient(mitreid_msg)
+        external_id = response['id']
+    elif deployment_type == 'delete':
+        log.info('Delete client with id: ' + str(external_id))
+        response = mitreid_agent.deleteClientById(registry_message['external_id'])
+        external_id = registry_message['external_id']
+    elif deployment_type == 'edit':
+        log.info('Update client with id: ' + str(external_id))
+        response = mitreid_agent.updateClientById(registry_message['external_id'], mitreid_msg)
+        external_id = registry_message['external_id']
+    return response, external_id
 
 
 if __name__ == '__main__':
@@ -123,6 +129,7 @@ if __name__ == '__main__':
             except:
                 log.critical('Failed to get access token')
                 raise SystemExit(1)
-            update_data(messages, config['mitreid_url'], access_token, config['agent_id'])
+            responses = update_data(messages, config['mitreid_url'], access_token, config['agent_id'])
+            publish_ams(responses,ams)
         time.sleep(config['time_interval'])
     log.info('Exit script')
