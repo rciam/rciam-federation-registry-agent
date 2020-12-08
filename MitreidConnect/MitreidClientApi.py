@@ -1,5 +1,4 @@
-import requests
-
+import requests, json
 
 """
 Manages all clients on MITREid Connect
@@ -36,20 +35,21 @@ class mitreidClientApi:
         try:
             response = requests.get(url, headers=header)
             response.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            print("Failed to make request to %s with error: %s" % (url, repr(err)))
-            return None
         except requests.exceptions.HTTPError as errh:
             print("Http Error: %s with error: %s" % (url, repr(errh)))
-            return None
+            return {'status': response.status_code,'error': repr(errh) }
         except requests.exceptions.ConnectionError as errc:
             print("Error Connecting: %s with error: %s" % (url, repr(errc)))
-            return None
+            return {'status': response.status_code,'error': repr(errc) }
         except requests.exceptions.Timeout as errt:
             print("Timeout Error: %s with error: %s" % (url, repr(errt)))
-            return None
+            return {'status': response.status_code,'error': repr(errt) }
+        except requests.exceptions.RequestException as err:
+            print("Failed to make request to %s with error: %s" % (url, err))
+            return {'status': response.status_code,'error': repr(err) }
 
-        return response.json()
+        return {'status': response.status_code,'response': response.json()}
+
 
     """
     Get a registered client by ID
@@ -68,20 +68,21 @@ class mitreidClientApi:
         try:
             response = requests.get(url, headers=header)
             response.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            print("Failed to make request to %s with error: %s" % (url, repr(err)))
-            return None
         except requests.exceptions.HTTPError as errh:
             print("Http Error: %s with error: %s" % (url, repr(errh)))
-            return None
+            return {'status': response.status_code,'error': repr(errh) }
         except requests.exceptions.ConnectionError as errc:
             print("Error Connecting: %s with error: %s" % (url, repr(errc)))
-            return None
+            return {'status': response.status_code,'error': repr(errc) }
         except requests.exceptions.Timeout as errt:
             print("Timeout Error: %s with error: %s" % (url, repr(errt)))
-            return None
+            return {'status': response.status_code,'error': repr(errt) }
+        except requests.exceptions.RequestException as err:
+            print("Failed to make request to %s with error: %s" % (url, err))
+            return {'status': response.status_code,'error': repr(err) }
 
-        return response.json()
+        return {'status': response.status_code,'response': response.json()}
+
 
     """
     Register new client
@@ -103,20 +104,21 @@ class mitreidClientApi:
         try:
             response = requests.post(url, headers=header, json=clientObject)
             response.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            print("Failed to make request to %s with error: %s" % (url, repr(err)))
-            return None
         except requests.exceptions.HTTPError as errh:
             print("Http Error: %s with error: %s" % (url, repr(errh)))
-            return None
+            return {'status': response.status_code,'error': repr(errh) }
         except requests.exceptions.ConnectionError as errc:
             print("Error Connecting: %s with error: %s" % (url, repr(errc)))
-            return None
+            return {'status': response.status_code,'error': repr(errc) }
         except requests.exceptions.Timeout as errt:
             print("Timeout Error: %s with error: %s" % (url, repr(errt)))
-            return None
+            return {'status': response.status_code,'error': repr(errt) }
+        except requests.exceptions.RequestException as err:
+            print("Failed to make request to %s with error: %s" % (url, err))
+            return {'status': response.status_code,'error': repr(err) }
 
-        return response.json()
+        return {'status': response.status_code,'response': response.json()}
+
 
     """
     Update an existing client by ID
@@ -139,20 +141,21 @@ class mitreidClientApi:
         try:
             response = requests.put(url, headers=header, json=clientObject)
             response.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            print("Failed to make request to %s with error: %s" % (url, repr(err)))
-            return None
         except requests.exceptions.HTTPError as errh:
             print("Http Error: %s with error: %s" % (url, repr(errh)))
-            return None
+            return {'status': response.status_code,'error': repr(errh) }
         except requests.exceptions.ConnectionError as errc:
             print("Error Connecting: %s with error: %s" % (url, repr(errc)))
-            return None
+            return {'status': response.status_code,'error': repr(errc) }
         except requests.exceptions.Timeout as errt:
             print("Timeout Error: %s with error: %s" % (url, repr(errt)))
-            return None
+            return {'status': response.status_code,'error': repr(errt) }
+        except requests.exceptions.RequestException as err:
+            print("Failed to make request to %s with error: %s" % (url, err))
+            return {'status': response.status_code,'error': repr(err) }
 
-        return response.json()
+        return {'status': response.status_code,'response': response.json()}
+
 
     """
     Delete a registered client by ID
@@ -169,19 +172,19 @@ class mitreidClientApi:
         header = {"Authorization": "Bearer " + self.token}
 
         try:
-            response = requests.delete(url, headers=header)
+            response = requests.delete(url, headers=header)       
             response.raise_for_status()
-        except requests.exceptions.RequestException as err:
-            print("Failed to make request to %s with error: %s" % (url, repr(err)))
-            return None
         except requests.exceptions.HTTPError as errh:
             print("Http Error: %s with error: %s" % (url, repr(errh)))
-            return None
+            return {'status': response.status_code,'error': repr(errh) }
         except requests.exceptions.ConnectionError as errc:
             print("Error Connecting: %s with error: %s" % (url, repr(errc)))
-            return None
+            return {'status': response.status_code,'error': repr(errc) }
         except requests.exceptions.Timeout as errt:
             print("Timeout Error: %s with error: %s" % (url, repr(errt)))
-            return None
+            return {'status': response.status_code,'error': repr(errt) }
+        except requests.exceptions.RequestException as err:
+            print("Failed to make request to %s with error: %s" % (url, err))
+            return {'status': response.status_code,'error': repr(err) }
 
-        return True
+        return {'status': response.status_code,'response': 'OK'}

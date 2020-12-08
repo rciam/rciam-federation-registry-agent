@@ -14,7 +14,11 @@ def refreshTokenGrant(issuer, refreshToken, clientId, clientSecret):
 
     extra = {"client_id": clientId, "client_secret": clientSecret}
 
-    provider = OAuth2Session()
-    response = provider.refresh_token(tokenUrl, refreshToken, **extra)
-
+    try:
+        print('Get access token from ' + issuer)
+        provider = OAuth2Session()
+        response = provider.refresh_token(tokenUrl, refreshToken, **extra)
+    except:
+        print('Failed to get access token')
+        raise SystemExit(1)
     return response["access_token"]

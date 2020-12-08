@@ -45,10 +45,9 @@ def create_ams_response(response, service_id, agent_id, external_id):
     msgNew['agent_id'] = agent_id
     if external_id>0:
         msgNew['external_id'] = external_id
-    if response is None:
-        msgNew['state'] = "error"
-    else:
-        msgNew['state'] = "deployed"
+    if response['status'] != 200:
+        msgNew['error_description'] = response['error']
+    msgNew['status_code'] = response['status']
     return  msgNew
 
 
@@ -67,21 +66,31 @@ def update_data(messages, issuer_url, access_token, agent_id):
         service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
         external_id = -1
         try:
-            response , external_id = call_mitreid(msg, mitreid_agent)
+            response, external_id = call_mitreid(msg, mitreid_agent)
             log.info('Message received from mitreId: ' + str(response))
             ams_message = create_ams_response(response, service_id, agent_id, external_id)
         except:
             log.critical('Exception catch, return error to ams')
-            ams_message = create_ams_response(None, service_id, agent_id, external_id)
+            ams_message = create_ams_response({'status': 0,'error': 'An error occurred while calling mitreId'}, service_id, agent_id, external_id)
         pub_messages.append({'attributes':{},'data':ams_message})
     return pub_messages
 
+
+# Publish message to ams upstream topic. Get as arguments
+# - the messages to be published
+# - the ams agent to handle the operation
 def publish_ams(pub_messages, ams_agent):
     if len(pub_messages)>0:
         log.info('Publish messaged to ams')
         log.debug('Messages published to ams: ' + str(pub_messages))
         ams_agent.publish(pub_messages)
 
+
+# Calls mitreid depending on the deployment type provided.
+# Operations handled:
+# - create
+# - delete
+# - edit
 def call_mitreid(registry_message,mitreid_agent):
     deployment_type = registry_message.pop('deployment_type')
     mitreid_msg = format_mitreid_msg(registry_message)
@@ -91,15 +100,16 @@ def call_mitreid(registry_message,mitreid_agent):
     if deployment_type == 'create':
         log.info('Create new client')
         response = mitreid_agent.createClient(mitreid_msg)
-        external_id = response['id']
+        if (response['status']==200):
+            external_id = response['response']['id']
     elif deployment_type == 'delete':
+        external_id = registry_message['external_id']
         log.info('Delete client with id: ' + str(external_id))
         response = mitreid_agent.deleteClientById(registry_message['external_id'])
-        external_id = registry_message['external_id']
     elif deployment_type == 'edit':
+        external_id = registry_message['external_id']
         log.info('Update client with id: ' + str(external_id))
         response = mitreid_agent.updateClientById(registry_message['external_id'], mitreid_msg)
-        external_id = registry_message['external_id']
     return response, external_id
 
 
@@ -121,14 +131,9 @@ if __name__ == '__main__':
         messages, ids = ams.pull(1)
         log.info('Received ' + str(len(messages)) +' messages from ams')
         if len(messages) > 0:
-            access_token = ''
-            try:
-                log.info('Get access token from ' + config['mitreid_url'])
-                access_token = refreshTokenGrant(config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'], config['mitreid_client_secret'])
-                ams.ack(ids)
-            except:
-                log.critical('Failed to get access token')
-                raise SystemExit(1)
+            log.info('Get access token from ' + config['mitreid_url'])
+            access_token = refreshTokenGrant(config['mitreid_url'], config['mitreid_refresh_token'], config['mitreid_client_id'], config['mitreid_client_secret'])
+            ams.ack(ids)
             responses = update_data(messages, config['mitreid_url'], access_token, config['agent_id'])
             publish_ams(responses,ams)
         time.sleep(config['time_interval'])
