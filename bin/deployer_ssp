@@ -26,18 +26,17 @@ def update_data( services, messages ):
     new_services = []
     for msg in messages:
         log.info('Update service: ' + msg['id'])
-        new_entry = True
-        for service in services:
-            if service['registry_service_id'] == msg['id']:
-                new_entry = False
-                if msg['deleted'] == False:      
+        if msg['deployment_type'] == 'create':
+            new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
+        elif msg['deployment_type'] == 'edit':
+            for service in services:
+                if service['registry_service_id'] == msg['id']:
                     service['whitelist'] = [ msg['entity_id'] ]
                     service['src'] = msg['metadata_url']
-                else:
+        elif msg['deployment_type'] == 'delete':
+            for service in services:
+                if service['registry_service_id'] == msg['id']:
                     services.remove(service)
-                break
-        if new_entry == True and msg['deleted'] == False:
-            new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
     return services + new_services
 
 '''
