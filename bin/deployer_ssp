@@ -33,10 +33,12 @@ def update_data( services, messages ):
                 if service['registry_service_id'] == msg['id']:
                     service['whitelist'] = [ msg['entity_id'] ]
                     service['src'] = msg['metadata_url']
+                    break
         elif msg['deployment_type'] == 'delete':
             for service in services:
                 if service['registry_service_id'] == msg['id']:
                     services.remove(service)
+                    break
     return services + new_services
 
 '''
