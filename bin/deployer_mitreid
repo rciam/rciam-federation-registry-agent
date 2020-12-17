@@ -3,7 +3,7 @@
 import json, time
 import argparse
 import logging
-from common import get_log_conf
+from Utils.common import get_log_conf, create_ams_response
 from ServiceRegistryAms.PullPublish import PullPublish
 from MitreidConnect.MitreidClientApi import mitreidClientApi
 from Utils.oauth import refreshTokenGrant
@@ -35,20 +35,6 @@ def format_mitreid_msg(msg):
     msgNew['clientName'] = msgNew.pop('serviceName')
     msgNew['clientDescription'] = msgNew.pop('serviceDescription')
     return msgNew
-
-
-# create_ams_response creates a json object with the result of the mitreId api call
-# that is readable from the rciam-federation-registry
-def create_ams_response(response, service_id, agent_id, external_id):
-    msgNew = {}
-    msgNew['id'] = service_id
-    msgNew['agent_id'] = agent_id
-    if external_id>0:
-        msgNew['external_id'] = external_id
-    if response['status'] != 200:
-        msgNew['error_description'] = response['error']
-    msgNew['status_code'] = response['status']
-    return  msgNew
 
 
 # This function will gain an access token from the provided issuer and it will
