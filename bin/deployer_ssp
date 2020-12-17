@@ -25,16 +25,19 @@ This function will return the altered current state and new additions to it
 def update_data( services, messages ):
     new_services = []
     for msg in messages:
-        log.info('Update service: ' + str(msg['id']))
         if msg['deployment_type'] == 'create':
-            new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
+            log.info('Create service: ' + str(msg['id']))
+            if not any(service['registry_service_id'] ==  msg['id'] for service in services):
+                new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
         elif msg['deployment_type'] == 'edit':
+            log.info('Update service: ' + str(msg['id']))
             for service in services:
                 if service['registry_service_id'] == msg['id']:
                     service['whitelist'] = [ msg['entity_id'] ]
                     service['src'] = msg['metadata_url']
                     break
         elif msg['deployment_type'] == 'delete':
+            log.info('Delete service: ' + str(msg['id']))
             for service in services:
                 if service['registry_service_id'] == msg['id']:
                     services.remove(service)
@@ -78,6 +81,7 @@ def get_services_from_conf(metadata_path):
         exit(1)
     return services_json
 
+
 # Call ssp syncer
 def call_ssp_syncer(ssp_url, metadata_key, request_timeout):
     log.info('Run sync http request to ' + ssp_url)
@@ -90,16 +94,15 @@ def call_ssp_syncer(ssp_url, metadata_key, request_timeout):
         return {'status': err.response.status_code, 'error': repr(err)}
     return {'status': response.status_code,'response': response.json()}
 
+
 def publish_ams(ams_agent, response, messages, agent_id):
     pub_messages = []
     for message in messages:
-        if message['deployment_type'] != 'create':
-            msg = create_ams_response(response, message['id'], agent_id, -1)
-        else:
-            msg = create_ams_response(response, message['id'], agent_id, message['external_id'])
+        msg = create_ams_response(response, message['id'], agent_id, -1)
         pub_messages.append({'attributes':{},'data': msg})
     print(pub_messages)
     ams_agent.publish(pub_messages)
+
 
 if __name__ == '__main__':
     # Get config path from arguments
@@ -119,6 +122,7 @@ if __name__ == '__main__':
         messages, ids = ams.pull(1)
         ams.ack(ids)
         log.info('Received ' + str(len(messages)) +' messages from ams')
+        log.debug('Messages:' + str(messages))
         if len(messages)>0:
             services_json = update_data(services_json, messages)
             generate_config(services_json, config['metadata_file'])
