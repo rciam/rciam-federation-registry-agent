@@ -5,7 +5,7 @@ import subprocess
 import argparse
 import requests
 import logging
-from common import get_log_conf
+from Utils.common import get_log_conf, create_ams_response
 from ServiceRegistryAms.PullPublish import PullPublish
 
 log = logging.getLogger(__name__)
@@ -25,19 +25,23 @@ This function will return the altered current state and new additions to it
 def update_data( services, messages ):
     new_services = []
     for msg in messages:
-        log.info('Update service: ' + msg['id'])
-        new_entry = True
-        for service in services:
-            if service['registry_service_id'] == msg['id']:
-                new_entry = False
-                if msg['deleted'] == False:      
+        if msg['deployment_type'] == 'create':
+            log.info('Create service: ' + str(msg['id']))
+            if not any(service['registry_service_id'] ==  msg['id'] for service in services):
+                new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
+        elif msg['deployment_type'] == 'edit':
+            log.info('Update service: ' + str(msg['id']))
+            for service in services:
+                if service['registry_service_id'] == msg['id']:
                     service['whitelist'] = [ msg['entity_id'] ]
                     service['src'] = msg['metadata_url']
-                else:
+                    break
+        elif msg['deployment_type'] == 'delete':
+            log.info('Delete service: ' + str(msg['id']))
+            for service in services:
+                if service['registry_service_id'] == msg['id']:
                     services.remove(service)
-                break
-        if new_entry == True and msg['deleted'] == False:
-            new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
+                    break
     return services + new_services
 
 '''
@@ -66,8 +70,38 @@ return array("""
     f = open(path,"w")
     f.write(header+content+footer)
     f.close()
-    
 
+ # Get current services
+def get_services_from_conf(metadata_path):
+    log.info('Read existing metadata file at ' + metadata_path)
+    services_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+metadata_path+'");'], universal_newlines=True, stdout=subprocess.PIPE)
+    services_json = json.loads(services_data.stdout)
+    if not isinstance(services_json, list):
+        log.error('Cannot read metadata php file')
+        exit(1)
+    return services_json
+
+
+# Call ssp syncer
+def call_ssp_syncer(ssp_url, metadata_key, request_timeout):
+    log.info('Run sync http request to ' + ssp_url)
+    payload = {'key': metadata_key, 'tag': 'hourly'}
+    try:
+        response = requests.get(ssp_url, params = payload, timeout=request_timeout)
+        response.raise_for_status()
+    except requests.exceptions.RequestException as err:
+        print("Failed to make request to %s with error: %s" % (ssp_url, err))
+        return {'status': err.response.status_code, 'error': repr(err)}
+    return {'status': response.status_code,'response': response.json()}
+
+
+def publish_ams(ams_agent, response, messages, agent_id):
+    pub_messages = []
+    for message in messages:
+        msg = create_ams_response(response, message['id'], agent_id, -1)
+        pub_messages.append({'attributes':{},'data': msg})
+    print(pub_messages)
+    ams_agent.publish(pub_messages)
 
 
 if __name__ == '__main__':
@@ -80,29 +114,19 @@ if __name__ == '__main__':
         config = json.load(json_data_file)
     get_log_conf(config['log_conf'])
 
-
     ams = init_ams_agent(path)
-    
-    # Get current services
-    log.info('Read existing metadata file at ' + config['metadata'])
-    services_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+config['metadata']+'");'], universal_newlines=True, stdout=subprocess.PIPE)
-    services_json = json.loads(services_data.stdout)
-    if not isinstance(services_json, list):
-        log.error('Cannot read metadata php file')
-        exit(1)
-    
+    services_json = get_services_from_conf(config['metadata_file'])
     # Get messages
     while True:
         log.info('Pull messages from ams')
         messages, ids = ams.pull(1)
         ams.ack(ids)
         log.info('Received ' + str(len(messages)) +' messages from ams')
+        log.debug('Messages:' + str(messages))
         if len(messages)>0:
             services_json = update_data(services_json, messages)
-            generate_config(services_json, config['metadata'])
-            log.info('Run sync http request to ' + config['ssp_url'])
-            payload = {'key': config['metadata_key'], 'tag': 'hourly'}
-            requests.get(config['ssp_url'], params = payload)
+            generate_config(services_json, config['metadata_file'])
+            response = call_ssp_syncer(config['ssp_url'], config['metadata_key'], config['request_timeout'])
+            publish_ams(ams, response, messages, config['agent_id'])
         time.sleep(config['time_interval'])
-
     log.info('Exit script')
