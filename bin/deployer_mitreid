@@ -20,6 +20,18 @@ def init_ams_agent(path):
     return PullPublish(config)
 
 
+def map_token_endpoint_value(key):
+    if key == 'client_secret_post':
+        return 'SECRET_POST'
+    elif key == 'client_secret_basic':
+        return 'SECRET_BASIC'
+    elif key == 'client_secret_jwt':
+        return 'SECRET_JWT'
+    elif key == 'private_key_jwt':
+        return 'PRIVATE_KEY'
+    elif key == 'none':
+        return 'NONE'
+
 # format_mitreid_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from mitreID API
 def format_mitreid_msg(msg):
@@ -34,6 +46,10 @@ def format_mitreid_msg(msg):
     msgNew['contacts'] = emails
     msgNew['clientName'] = msgNew.pop('serviceName')
     msgNew['clientDescription'] = msgNew.pop('serviceDescription')
+    if 'externalId' in msgNew:
+        msgNew.pop('externalId')
+    if 'tokenEndpointAuthMethod' in msgNew:
+        msgNew['tokenEndpointAuthMethod'] = map_token_endpoint_value(msgNew['tokenEndpointAuthMethod'])
     return msgNew
 
 
