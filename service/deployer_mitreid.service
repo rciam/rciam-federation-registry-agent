@@ -5,6 +5,7 @@ Description=MitreId deployer service
 User=root
 ExecStart={{venv_path}/deployer_mitreid -c /etc/conf/deployer_mitreid.config 
 Restart=always
+RestartSec=60s
 Type=simple
 
 [Install]
