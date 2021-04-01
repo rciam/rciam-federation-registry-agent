@@ -20,61 +20,67 @@ loader.exec_module(deployer_ssp)
 
 class TestDeployerSsp(unittest.TestCase):
 
+    # Test that a creation adds a new enty in the data array
     def test_update_data_create(self):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}]
         new_service = [{"id": "testId2", "entity_id": "testEntityId2", "deployment_type": "create", "metadata_url": "TestMetadataUrl2"}]
         test_case_result = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
+
         func_result = deployer_ssp.update_data(services, new_service)
         self.assertEqual(func_result, test_case_result)
 
-
+    # Test that a creation of an existing enty do not alter the data array
     def test_update_data_double_create(self):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}]
         new_service = [{"id": "testId2", "entity_id": "testEntityId2", "deployment_type": "create", "metadata_url": "TestMetadataUrl2"}]
         test_case_result = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
+
         func_result = deployer_ssp.update_data(services, new_service)
         func_result = deployer_ssp.update_data(func_result, new_service)
         self.assertEqual(func_result, test_case_result)
 
-
+    # Test that an edit to an entry alters the data array
     def test_update_data_update(self):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
         update_service = [{"id": "testId2", "entity_id": "testEntityId2", "deployment_type": "edit", "metadata_url": "TestMetadataUrlEDIT"}]
         test_case_result = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrlEDIT"}]
+
         func_result = deployer_ssp.update_data(services, update_service)
         self.assertEqual(func_result, test_case_result)
 
-
+    # Test that a deletion removes the entry from the data array
     def test_update_data_delete(self):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
         delete_service = [{"id": "testId2", "entity_id": "testEntityId2", "deployment_type": "delete", "metadata_url": "TestMetadataUrl2"}]
         test_case_result = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}]
+
         func_result = deployer_ssp.update_data(services, delete_service)
         self.assertEqual(func_result, test_case_result)
 
-
+    # Test that a deletion of a non existing entry does not alters the data array
     def test_update_data_double_delete(self):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
         delete_service = [{"id": "testId2", "entity_id": "testEntityId2", "deployment_type": "delete", "metadata_url": "TestMetadataUrl2"}]
         test_case_result = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}]
+
         func_result = deployer_ssp.update_data(services, delete_service)
         func_result = deployer_ssp.update_data(func_result, delete_service)
         self.assertEqual(func_result, test_case_result)
 
-
+    # Verify the generated php config
     def test_generate_config(self):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
         deployer_ssp.generate_config(services,'./test_file.php') 
-        self.assertTrue(filecmp.cmp('./tests/files/ssp_config.php',get_resource_path('./files/ssp_config.php')), 'You error message')
+        self.assertTrue(filecmp.cmp('./test_file.php',get_resource_path('./files/ssp_config.php')), 'You error message')
 
-
+    # Call ssp syncer with 200 http response
     def test_call_ssp_syncer_positive(self):
         mock = Mock()
         mock.status_code = 200
@@ -85,7 +91,7 @@ class TestDeployerSsp(unittest.TestCase):
         func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60)     
         self.assertEqual(func_result, {'status': 200,'response': ''})
 
-
+    # Call ssp syncer with 400 http response
     def test_call_ssp_syncer_negative(self):
         mock = Mock()
         mock.status_code = 400
@@ -96,23 +102,15 @@ class TestDeployerSsp(unittest.TestCase):
         func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60)
         self.assertEqual(func_result, {'status': 400,'response': 'ERROR'})
 
-    def test_publish_ams_empty(self):
-        mock = Mock()
-        mock.publish = MagicMock(return_value='')
-        deployer_ssp.publish_ams(mock,"",[],1)
-
-    def test_publish_ams_obj(self):
-        mock = Mock()
-        mock.publish = MagicMock(return_value='')
-        deployer_ssp.publish_ams(mock,{'status':200},[{'id':1},{'id':2}],1)
-
+    # Test reading from php configuration file
     def test_get_services_from_conf(self):
         mock_sub = subprocess
         ret = subprocess.CompletedProcess
         ret.stdout = '[{"id":11}]'
         mock_sub.run = MagicMock(return_value=ret)
-        deployer_ssp.get_services_from_conf('')
+        self.assertEqual(deployer_ssp.get_services_from_conf(''),[{"id":11}])
     
+    # Test reading from php configuration file with return value that is not list
     def test_get_services_from_conf_fail(self):
         mock_sub = subprocess
         ret = subprocess.CompletedProcess
