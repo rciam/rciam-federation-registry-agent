@@ -25,12 +25,49 @@ class TestDeployerSsp(unittest.TestCase):
         func_result = deployer_mitreid.format_mitreid_msg(new_service)
         self.assertEqual(func_result, out_service)
 
-    def test_call_mitreid(self):
-        new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}]}
-        out_service = {"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}
-        func_result = deployer_mitreid.format_mitreid_msg(new_service)
-        self.assertEqual(func_result, out_service)
+    def test_call_mitreid_create(self):
+        new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}
+        out_service = {"response": {"id": 12,"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}, "status": 200}
+        mock = Mock()
+        mock.createClient = MagicMock(return_value=out_service)
+        func_result = deployer_mitreid.call_mitreid(new_service,mock)
+        self.assertEqual(func_result, (out_service,12))
 
+    def test_call_mitreid_delete(self):
+        new_service = {"external_id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "delete"}
+        out_service = {"response": {"id": 12,"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}, "status": 200}
+        mock = Mock()
+        mock.deleteClientById = MagicMock(return_value=out_service)
+        func_result = deployer_mitreid.call_mitreid(new_service,mock)
+        self.assertEqual(func_result, (out_service,12))
 
+    def test_call_mitreid_update(self):
+        new_service = {"external_id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "edit"}
+        out_service = {"response": {"id": 12,"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}, "status": 200}
+        mock = Mock()
+        mock.updateClientById = MagicMock(return_value=out_service)
+        func_result = deployer_mitreid.call_mitreid(new_service,mock)
+        self.assertEqual(func_result, (out_service,12))
+
+    def test_publish_ams_empty(self):
+        mock = Mock()
+        mock.publish = MagicMock(return_value='')
+        deployer_mitreid.publish_ams([],mock)
+
+    def test_publish_ams_obj(self):
+        mock = Mock()
+        mock.publish = MagicMock(return_value='')
+        deployer_mitreid.publish_ams([1,2],mock)
+
+    def test_update_data_fail(self):
+        new_msg = [{"id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}]
+        func_result = deployer_mitreid.update_data(new_msg,'','',1)
+        self.assertEqual(func_result, [{'attributes':{},'data': {"id":12,"agent_id":1,"status_code": 0, "state": "error", "error_description": "An error occurred while calling mitreId"}}])
+        
+    def test_update_data_success(self):
+        new_msg = [{"id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}]
+        deployer_mitreid.call_mitreid = MagicMock(return_value=({'status':200},12))
+        func_result = deployer_mitreid.update_data(new_msg,'url','token',1)
+        self.assertEqual(func_result, [{'attributes':{},'data': {"id":12,'external_id': 12,"agent_id":1,"status_code": 200, "state": "deployed"}}])
 
         

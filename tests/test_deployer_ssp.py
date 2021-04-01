@@ -7,6 +7,7 @@ import os
 import importlib.machinery
 import filecmp
 import requests
+import subprocess
 from unittest.mock import MagicMock, Mock
 
 def get_resource_path(relative_path):
@@ -71,7 +72,7 @@ class TestDeployerSsp(unittest.TestCase):
         services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
             {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
         deployer_ssp.generate_config(services,'./test_file.php') 
-        self.assertTrue(filecmp.cmp('./test_file.php',get_resource_path('./files/ssp_config.php')), 'You error message')
+        self.assertTrue(filecmp.cmp('./tests/files/ssp_config.php',get_resource_path('./files/ssp_config.php')), 'You error message')
 
 
     def test_call_ssp_syncer_positive(self):
@@ -95,4 +96,27 @@ class TestDeployerSsp(unittest.TestCase):
         func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60)
         self.assertEqual(func_result, {'status': 400,'response': 'ERROR'})
 
-        
+    def test_publish_ams_empty(self):
+        mock = Mock()
+        mock.publish = MagicMock(return_value='')
+        deployer_ssp.publish_ams(mock,"",[],1)
+
+    def test_publish_ams_obj(self):
+        mock = Mock()
+        mock.publish = MagicMock(return_value='')
+        deployer_ssp.publish_ams(mock,{'status':200},[{'id':1},{'id':2}],1)
+
+    def test_get_services_from_conf(self):
+        mock_sub = subprocess
+        ret = subprocess.CompletedProcess
+        ret.stdout = '[{"id":11}]'
+        mock_sub.run = MagicMock(return_value=ret)
+        deployer_ssp.get_services_from_conf('')
+    
+    def test_get_services_from_conf_fail(self):
+        mock_sub = subprocess
+        ret = subprocess.CompletedProcess
+        ret.stdout = '{"id":11}'
+        mock_sub.run = MagicMock(return_value=ret)
+        with self.assertRaises(SystemExit):
+            deployer_ssp.get_services_from_conf('')
