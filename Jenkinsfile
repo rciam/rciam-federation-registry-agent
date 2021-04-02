@@ -17,7 +17,7 @@ pipeline {
                 echo 'Running tests...'
                 sh '''
                     cd ${WORKSPACE}/$PROJECT_DIR
-                    pipenv install --python 3 pytest
+                    pipenv install --python 3 pytest pytest-cov -r requirements.txt
                     pipenv run pytest --cov-report=xml --cov=bin
                     pipenv run pytest -o junit_family=xunit2 --junitxml=junit.xml
                 '''
@@ -67,10 +67,14 @@ pipeline {
             }
             post {
                 always {
-                    sh '''
-                      cd $WORKSPACE/$PROJECT_DIR
-                      pipenv --rm
-                    '''
+                    script {
+                        if ( env.BRANCH_NAME == 'devel' || env.BRANCH_NAME == 'master') {
+                            sh '''
+                              cd $WORKSPACE/$PROJECT_DIR
+                              pipenv --rm
+                            '''
+                        }
+                    }
                     cleanWs()
                 }
             }
