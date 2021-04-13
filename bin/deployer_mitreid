@@ -132,7 +132,11 @@ if __name__ == '__main__':
     with open(path) as json_data_file:
         config = json.load(json_data_file)
 
-    get_log_conf(config['log_conf'])
+    # Get log_conf from project arguments else use the global setting
+    if 'log_conf' in config['mitreid']:
+        get_log_conf(config['mitreid']['log_conf'])
+    else:
+        get_log_conf(config['log_conf'])
 
     log.info('Init ams agent')
     ams = PullPublish(config['mitreid']['ams'])

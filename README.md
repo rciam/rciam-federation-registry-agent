@@ -76,7 +76,7 @@ example_deployers.config.json
 }
 ```
 
-As shown above there are 2 main groups mitreid and ssp, for each group there are unique ams settings and service specific configuration values. The only global value is the `log_conf` path.
+As shown above there are 2 main groups mitreid and ssp, for each group there are unique ams settings and service specific configuration values. The only global value is the `log_conf` path if you want to use the same logging configuration for both of the deployers. In case you need a different configuration for a deployer you can add log_conf in the scope of "mitreid" or "ssp"
 
 ### ServiceRegistryAms
 Use ServiceRegistryAms as an manager to pull and publish messages from ams
