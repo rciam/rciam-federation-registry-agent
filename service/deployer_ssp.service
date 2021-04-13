@@ -5,6 +5,7 @@ Description=Satosa deployer service
 User=root
 ExecStart={{venv_path}/deployer_ssp -c /etc/conf/deployer_ssp.config 
 Restart=always
+RestartSec=60s
 Type=simple
 
 [Install]
