@@ -26,7 +26,7 @@ class PullPublish():
             data = msg.get_data()
             msgid = msg.get_msgid()
             attr = msg.get_attr()
-            messages.append(json.loads(data))
+            messages.append(json.loads(data.decode("utf-8")))
             #print('msgid={0}, data={1}, attr={2}'.format(msgid, data, attr))
             ackids.append(id)
         return messages, ackids
