@@ -67,13 +67,14 @@ def update_data(messages, issuer_url, access_token, agent_id):
         log.debug('Message from ams: ' + str(msg))
         service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
         external_id = -1
+        client_id = ''
         try:
-            response, external_id = call_mitreid(msg, mitreid_agent)
+            response, external_id, client_id = call_mitreid(msg, mitreid_agent)
             log.info('Message received from mitreId: ' + str(response))
-            ams_message = create_ams_response(response, service_id, agent_id, external_id)
+            ams_message = create_ams_response(response, service_id, agent_id, external_id, client_id)
         except:
             log.critical('Exception catch, return error to ams')
-            ams_message = create_ams_response({'status': 0,'error': 'An error occurred while calling mitreId'}, service_id, agent_id, external_id)
+            ams_message = create_ams_response({'status': 0,'error': 'An error occurred while calling mitreId'}, service_id, agent_id, external_id, client_id)
         pub_messages.append({'attributes':{},'data':ams_message})
     return pub_messages
 
@@ -99,11 +100,13 @@ def call_mitreid(registry_message,mitreid_agent):
     log.debug('Formated message for mitreId: ' + str(mitreid_msg))
     response = {}
     external_id = -1
+    client_id = ''
     if deployment_type == 'create':
         log.info('Create new client')
         response = mitreid_agent.createClient(mitreid_msg)
         if (response['status']==200):
             external_id = response['response']['id']
+            client_id = response['response']['clientId']
     elif deployment_type == 'delete':
         external_id = registry_message['external_id']
         log.info('Delete client with id: ' + str(external_id))
@@ -112,7 +115,9 @@ def call_mitreid(registry_message,mitreid_agent):
         external_id = registry_message['external_id']
         log.info('Update client with id: ' + str(external_id))
         response = mitreid_agent.updateClientById(registry_message['external_id'], mitreid_msg)
-    return response, external_id
+        if (response['status']==200):
+            client_id = response['response']['clientId']
+    return response, external_id, client_id
 
 
 if __name__ == '__main__':

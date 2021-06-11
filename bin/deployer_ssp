@@ -98,7 +98,7 @@ def call_ssp_syncer(ssp_url, metadata_key, request_timeout):
 def publish_ams(ams_agent, response, messages, agent_id):
     pub_messages = []
     for message in messages:
-        msg = create_ams_response(response, message['id'], agent_id, -1)
+        msg = create_ams_response(response, message['id'], agent_id, -1, '')
         pub_messages.append({'attributes':{},'data': msg})
     print(pub_messages)
     ams_agent.publish(pub_messages)
