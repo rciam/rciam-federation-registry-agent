@@ -7,6 +7,33 @@ pipeline {
         PROJECT_DIR="rciam-federation-registry-agent"
     }
     stages {
+        stage ('Testing') {
+            agent {
+                docker {
+                    image 'argo.registry:5000/python3'
+                }
+            }
+            steps {
+                echo 'Running tests...'
+                sh '''
+                    cd ${WORKSPACE}/$PROJECT_DIR
+                    pipenv install --python 3 pytest pytest-cov -r requirements.txt
+                    pipenv run pytest --cov-report=xml --cov=bin
+                    pipenv run pytest -o junit_family=xunit2 --junitxml=junit.xml
+                '''
+                junit '**/junit.xml'
+                cobertura coberturaReportFile: '**/coverage.xml'
+            }
+            post {
+                always {
+                    sh '''
+                      cd $WORKSPACE/$PROJECT_DIR
+                      pipenv --rm
+                    '''
+                    cleanWs()
+                }
+            }
+        }
         stage ('Upload to PyPI') {
             agent {
                 docker {
@@ -40,6 +67,14 @@ pipeline {
             }
             post {
                 always {
+                    script {
+                        if ( env.BRANCH_NAME == 'devel' || env.BRANCH_NAME == 'master') {
+                            sh '''
+                              cd $WORKSPACE/$PROJECT_DIR
+                              pipenv --rm
+                            '''
+                        }
+                    }
                     cleanWs()
                 }
             }

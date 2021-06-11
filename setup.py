@@ -27,7 +27,7 @@ setup(
     zip_safe=False,
     install_requires=install_requires,
     dependency_links=dependency_links,
-    description='A library that connects to ams using argo-ams-library and syncs with mitrID and ssp',
+    description='A library that connects to ams using argo-ams-library and syncs with mitreID and ssp',
     long_description = long_description,
     classifiers=[
         'License :: OSI Approved :: Apache Software License',
