@@ -36,7 +36,7 @@ class TestDeployerSsp(unittest.TestCase):
         mock.createClient = MagicMock(return_value=out_service)
 
         func_result = deployer_mitreid.call_mitreid(new_service,mock)
-        self.assertEqual(func_result, (out_service,12))
+        self.assertEqual(func_result, (out_service,12, 'testId1'))
 
     # Test calling mitre id to delete an entry
     def test_call_mitreid_delete(self):
@@ -47,7 +47,7 @@ class TestDeployerSsp(unittest.TestCase):
         mock.deleteClientById = MagicMock(return_value=out_service)
 
         func_result = deployer_mitreid.call_mitreid(new_service,mock)
-        self.assertEqual(func_result, (out_service,12))
+        self.assertEqual(func_result, (out_service,12,''))
 
     # Test calling mitre id to update an entry
     def test_call_mitreid_update(self):
@@ -58,7 +58,7 @@ class TestDeployerSsp(unittest.TestCase):
         mock.updateClientById = MagicMock(return_value=out_service)
 
         func_result = deployer_mitreid.call_mitreid(new_service,mock)
-        self.assertEqual(func_result, (out_service,12))
+        self.assertEqual(func_result, (out_service,12, 'testId1'))
 
     # Test update data with error when calling mitreid
     def test_update_data_fail(self):
@@ -70,9 +70,9 @@ class TestDeployerSsp(unittest.TestCase):
     # Test update data calling mitreid succesfully
     def test_update_data_success(self):
         new_msg = [{"id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}]
-        deployer_mitreid.call_mitreid = MagicMock(return_value=({'status':200},12))
+        deployer_mitreid.call_mitreid = MagicMock(return_value=({'status':200},12, 'testId1'))
 
         func_result = deployer_mitreid.update_data(new_msg,'url','token',1)
-        self.assertEqual(func_result, [{'attributes':{},'data': {"id":12,'external_id': 12,"agent_id":1,"status_code": 200, "state": "deployed"}}])
+        self.assertEqual(func_result, [{'attributes':{},'data': {"id":12,'external_id': 12,"agent_id":1,"status_code": 200, "state": "deployed", "client_id": "testId1"}}])
 
         
