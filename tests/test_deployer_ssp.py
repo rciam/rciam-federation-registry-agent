@@ -88,8 +88,8 @@ class TestDeployerSsp(unittest.TestCase):
         mock.json = MagicMock(return_value='')
         mock_req = requests
         mock_req.get = MagicMock(return_value=mock)
-        func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60)     
-        self.assertEqual(func_result, {'status': 200,'response': ''})
+        func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60, 'hourly')
+        self.assertEqual(func_result['status'],200)
 
     # Call ssp syncer with 400 http response
     def test_call_ssp_syncer_negative(self):
@@ -99,8 +99,8 @@ class TestDeployerSsp(unittest.TestCase):
         mock.json = MagicMock(return_value='ERROR')
         mock_req = requests
         mock_req.get = MagicMock(return_value=mock)
-        func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60)
-        self.assertEqual(func_result, {'status': 400,'response': 'ERROR'})
+        func_result = deployer_ssp.call_ssp_syncer('test_url', 'key', 60, 'hourly')
+        self.assertEqual(func_result['status'],400)
 
     # Test reading from php configuration file
     def test_get_services_from_conf(self):
