@@ -1,0 +1,36 @@
+{
+    "ssp": {
+        "ams": {
+            "host": "example.host.com",
+            "project": "ams-project-name-ssp",
+            "pull_topic": "ams-topic-ssp",
+            "pull_sub": "ams-sub-ssp",
+            "token": "ams-token-ssp",
+            "pub_topic": "ams-publish-topic-ssp",
+            "poll_interval": 1,
+            "agent_id": "1"
+        },
+        "metadata_conf_file": "/path/to/ssp/metadata/file.php",
+        "cron_secret": "SSP cron secret",
+        "cron_url": "http://localhost/proxy/module.php/cron/cron.php",
+        "cron_tag": "hourly",
+        "request_timeout": 100
+    },
+    "mitreid": {
+        "ams": {
+            "host": "example.host.com",
+            "project": "ams-project-name-mitreid",
+            "pull_topic": "ams-topic-mitreid",
+            "pull_sub": "ams-sub-mitreid",
+            "token": "ams-token-mitreid",
+            "pub_topic": "ams-publish-topic-mitreid",
+            "poll_interval": 1,
+            "agent_id": "1"
+        },
+        "issuer": "https://example.com/oidc",
+        "refresh_token": "refresh token",
+        "client_id": "client ID",
+        "client_secret": "client secret"
+    },
+    "log_conf": "conf/logger.conf"
+}
