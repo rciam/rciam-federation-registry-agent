@@ -4,14 +4,15 @@ from argo_ams_library import ArgoMessagingService,AmsMessage, AmsException
 
 class PullPublish():
     def __init__(self,config):
-        with open("config.json") as json_data_file:
-            data = json.load(json_data_file)
         self.pull_sub = config['pull_sub']
+        
         self.pub_topic = config['pub_topic']
         self.pull_topic = config['pull_topic']
-        self.ams = ArgoMessagingService(endpoint=data['host'], token=config['token'], project=config['project'])
+        print(self.pull_topic)
+        self.ams = ArgoMessagingService(endpoint=config['host'], token=config['token'], project=config['project'])
 
     def pull(self,nummsgs):
+        
         messages = []
         try:
             if not self.ams.has_sub(self.pull_sub):
@@ -47,7 +48,6 @@ class PullPublish():
         except AmsException as e:
             print(e)
             raise SystemExit(1)
-
         # publish one message to given topic. message is constructed with
         # help of AmsMessage which accepts data and attributes keys.
         # data is Base64 encoded, attributes is dictionary of arbitrary

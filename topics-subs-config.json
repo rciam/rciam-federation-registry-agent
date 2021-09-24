@@ -1,0 +1,64 @@
+{
+    "egi": 
+        [ 
+            {
+                "topic": "_egi_service_mitreid_development",
+                "subs": ["_egi_service_oidc_mitreid_developent_1"]
+            },
+            {
+                "topic": "_egi_service_mitreid_production",
+                "subs": ["_egi_service_oidc_mitreid_production_2"]
+            },
+            {
+                "topic": "_egi_service_mitreid_demo",
+                "subs": ["_egi_service_oidc_mitreid_demo_3"]
+            },
+            {
+                "topic": "_egi_service_ssp_development",
+                "subs": ["_egi_service_saml_ssp_development_4"]
+            },
+            {
+                "topic": "_egi_service_ssp_production",
+                "subs": ["_egi_service_saml_ssp_production_5","_egi_service_saml_ssp_production_6"]
+            },
+            {
+                "topic": "_egi_service_ssp_demo",
+                "subs": ["_egi_service_saml_ssp_demo_7","_egi_service_saml_ssp_demo_8"]
+            }
+        ],
+    "eosc":
+        [
+            {
+                "topic": "_eosc_service_mitreid_development",
+                "subs": ["_eosc_service_oidc_mitreid_developent_9"]
+            },
+            {
+                "topic": "_eosc_service_mitreid_production",
+                "subs": ["_eosc_service_oidc_mitreid_production_10"]
+            },
+            {
+                "topic": "_eosc_service_mitreid_demo",
+                "subs": ["_eosc_service_oidc_mitreid_demo_11"]
+            },
+            {
+                "topic": "_eosc_service_ssp_development",
+                "subs": ["_eosc_service_saml_ssp_development_12"]
+            },
+            {
+                "topic": "_eosc_service_ssp_production",
+                "subs": ["_eosc_service_saml_ssp_production_13"]
+            },
+            {
+                "topic": "_eosc_service_ssp_demo",
+                "subs": ["_eosc_service_saml_ssp_demo_14"]
+            }
+        ],
+    "grnet":
+        [
+            {
+                "topic": "_grnet_service_satosa_development",
+                "subs":["_grnet_service_saml_satosa_development_15"]
+            }
+        ]
+}
+
