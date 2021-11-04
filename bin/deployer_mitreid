@@ -35,8 +35,10 @@ def format_mitreid_msg(msg):
     for contact in msg['contacts']:
         emails.append(contact['email'])
     msgNew['contacts'] = emails
-    msgNew['clientName'] = msgNew.pop('serviceName')
-    msgNew['clientDescription'] = msgNew.pop('serviceDescription')
+    if 'serviceName' in msgNew:
+        msgNew['clientName'] = msgNew.pop('serviceName')
+    if 'serviceDescription' in msgNew:
+        msgNew['clientDescription'] = msgNew.pop('serviceDescription')
     if 'externalId' in msgNew:
         msgNew.pop('externalId')
     if 'tokenEndpointAuthMethod' in msgNew:
