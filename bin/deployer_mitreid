@@ -41,6 +41,10 @@ def format_mitreid_msg(msg):
         msgNew.pop('externalId')
     if 'tokenEndpointAuthMethod' in msgNew:
         msgNew['tokenEndpointAuthMethod'] = map_token_endpoint_value(msgNew['tokenEndpointAuthMethod'])
+    if 'aupUri' in msgNew:
+        msgNew['tosUri'] = msgNew.pop('aupUri')
+    if 'websiteUrl' in msgNew:
+        msgNew['clientUri'] = msgNew.pop('websiteUrl')
     return msgNew
 
 
