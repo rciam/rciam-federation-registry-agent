@@ -33,7 +33,8 @@ def format_mitreid_msg(msg):
         new_key = components[0] + ''.join(x.title() for x in components[1:])
         msgNew[new_key] = msg[key]
     for contact in msg['contacts']:
-        emails.append(contact['email'])
+        if ( contact['type'] == 'technical' or contact['type'] == 'support' ):
+            emails.append(contact['email'])
     msgNew['contacts'] = emails
     msgNew['clientName'] = msgNew.pop('serviceName')
     msgNew['clientDescription'] = msgNew.pop('serviceDescription')
