@@ -21,7 +21,7 @@ class TestDeployerSsp(unittest.TestCase):
 
     # Test the format is compatible with mitreid
     def test_format_mitreid_msg(self):
-        new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}]}
+        new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1", "type": "technical"},{"name": "name2", "email":"email2", "type": "security"}]}
         out_service = {"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}
 
         func_result = deployer_mitreid.format_mitreid_msg(new_service)
@@ -29,7 +29,7 @@ class TestDeployerSsp(unittest.TestCase):
 
     # Test calling mitre id to create a new entry
     def test_call_mitreid_create(self):
-        new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}
+        new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1", "type": "technical"},{"name": "name2", "email":"email2", "type": "security"}], "deployment_type": "create"}
         out_service = {"response": {"id": 12,"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}, "status": 200}
 
         mock = Mock()
@@ -40,7 +40,7 @@ class TestDeployerSsp(unittest.TestCase):
 
     # Test calling mitre id to delete an entry
     def test_call_mitreid_delete(self):
-        new_service = {"external_id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "delete"}
+        new_service = {"external_id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1", "type": "technical"},{"name": "name2", "email":"email2", "type": "security"}], "deployment_type": "delete"}
         out_service = {"response": {"id": 12,"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}, "status": 200}
 
         mock = Mock()
@@ -51,7 +51,7 @@ class TestDeployerSsp(unittest.TestCase):
 
     # Test calling mitre id to update an entry
     def test_call_mitreid_update(self):
-        new_service = {"external_id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "edit"}
+        new_service = {"external_id": 12, "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1", "type": "technical"},{"name": "name2", "email":"email2", "type": "security"}], "deployment_type": "edit"}
         out_service = {"response": {"id": 12,"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}, "status": 200}
 
         mock = Mock()
