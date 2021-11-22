@@ -39,6 +39,8 @@ def format_mitreid_msg(msg):
         msgNew['clientName'] = msgNew.pop('serviceName')
     if 'serviceDescription' in msgNew:
         msgNew['clientDescription'] = msgNew.pop('serviceDescription')
+    if 'idTokenTimeoutSeconds' in msgNew:
+        msgNew['idTokenValiditySeconds'] = msgNew.pop('idTokenTimeoutSeconds')
     if 'externalId' in msgNew:
         msgNew.pop('externalId')
     if 'tokenEndpointAuthMethod' in msgNew:
