@@ -1,0 +1,143 @@
+#!/usr/bin/env python3
+
+import json, time
+import subprocess
+import argparse
+import requests
+import logging
+from Utils.common import get_log_conf, create_ams_response
+from ServiceRegistryAms.PullPublish import PullPublish
+
+log = logging.getLogger(__name__)
+
+'''
+This function will return the altered current state and new additions to it
+    Function update_data gets 2 arguments:
+    - services, current state included in the php metadata file in json
+    - messages, the new incoming messages in json
+'''
+def update_data( services, messages ):
+    new_services = []
+    for msg in messages:
+        if msg['deployment_type'] == 'create':
+            log.info('Create service: ' + str(msg['id']))
+            if not any(service['registry_service_id'] ==  msg['id'] for service in services):
+                new_services.append({'registry_service_id': msg['id'], 'whitelist': [msg['entity_id']], 'src': msg['metadata_url']})
+        elif msg['deployment_type'] == 'edit':
+            log.info('Update service: ' + str(msg['id']))
+            for service in services:
+                if service['registry_service_id'] == msg['id']:
+                    service['whitelist'] = [ msg['entity_id'] ]
+                    service['src'] = msg['metadata_url']
+                    break
+        elif msg['deployment_type'] == 'delete':
+            log.info('Delete service: ' + str(msg['id']))
+            for service in services:
+                if service['registry_service_id'] == msg['id']:
+                    services.remove(service)
+                    break
+    return services + new_services
+
+'''
+This function get the current state and will generate a configuration
+php file with the updated state
+    generate_config gets 2 arguments:
+    - services, which represents the current state in json
+    - path, which is the location of the config file
+'''
+def generate_config( services, path ):
+    log.info('Generate php ssp config file at ' + path)
+    header = """<?php
+return array("""
+    footer = """
+);"""
+    content = ""
+    for service in services:
+        content += """
+    array(
+        'registry_service_id' => """ + str(service['registry_service_id']) + """,
+        'whitelist' => array (
+            '"""+ str(service['whitelist'][0])  +"""',
+        ),
+        'src' => '""" + str(service['src']) + """',
+    ),"""
+    f = open(path,"w")
+    f.write(header+content+footer)
+    f.close()
+
+ # Get current services
+def get_services_from_conf(metadata_path):
+    log.info('Read existing metadata file at ' + metadata_path)
+    services_data = subprocess.run(['php', '-r', 'echo json_encode(include "'+metadata_path+'");'], universal_newlines=True, stdout=subprocess.PIPE)
+    services_json = json.loads(services_data.stdout)
+    if not isinstance(services_json, list):
+        log.error('Cannot read metadata php file')
+        exit(1)
+    return services_json
+
+
+# Call ssp syncer
+def call_ssp_syncer(ssp_url, metadata_key, request_timeout, cron_tag):
+    log.info('Run sync http request to ' + ssp_url)
+    payload = {'key': metadata_key, 'tag': cron_tag}
+    try:
+        response = requests.get(ssp_url, params = payload, timeout=request_timeout)
+        response.raise_for_status()
+    except requests.exceptions.HTTPError as errh:
+        print("Http Error: %s with error: %s" % (ssp_url, repr(errh)))
+        return {'status': response.status_code,'error': repr(errh) }
+    except requests.exceptions.ConnectionError as errc:
+        print("Error Connecting: %s with error: %s" % (ssp_url, repr(errc)))
+        return {'status': 0,'error': repr(errc) }
+    except requests.exceptions.Timeout as errt:
+        print("Timeout Error: %s with error: %s" % (ssp_url, repr(errt)))
+        return {'status': 0,'error': repr(errt) }
+    except requests.exceptions.RequestException as err:
+        print("Failed to make request to %s with error: %s" % (ssp_url, err))
+        return {'status': 0,'error': repr(err) }
+    else:
+        return {'status': response.status_code,'response': repr(response)}
+
+
+def publish_ams(ams_agent, response, messages, agent_id):
+    pub_messages = []
+    for message in messages:
+        msg = create_ams_response(response, message['id'], agent_id, -1, '')
+        pub_messages.append({'attributes':{},'data': msg})
+    print(pub_messages)
+    ams_agent.publish(pub_messages)
+
+
+if __name__ == '__main__':
+    # Get config path from arguments
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-c', required=True, type=str, help="Script configuration file path")
+    args = parser.parse_args()
+    path = args.c
+    with open(path) as json_data_file:
+        config = json.load(json_data_file)
+    
+    # Get log_conf from project arguments else use the global setting
+    if 'log_conf' in config['ssp']:
+        get_log_conf(config['ssp']['log_conf'])
+    else:
+        get_log_conf(config['log_conf'])
+
+    log.info('Init ams agent')
+    ams = PullPublish(config['ssp']['ams'])
+
+    services_json = get_services_from_conf(config['ssp']['metadata_conf_file'])
+    # Get messages
+    while True:
+        log.info('Pull messages from ams')
+        messages, ids = ams.pull(1)
+        ams.ack(ids)
+        log.info('Received ' + str(len(messages)) +' messages from ams')
+        log.debug('Messages:' + str(messages))
+        if len(messages)>0:
+            services_json = update_data(services_json, messages)
+            generate_config(services_json, config['ssp']['metadata_conf_file'])
+            response = call_ssp_syncer(config['ssp']['cron_url'], config['ssp']['cron_secret'], config['ssp']['request_timeout'], config['ssp']['cron_tag'])
+            publish_ams(ams, response, messages, config['ssp']['ams']['agent_id'])
+        time.sleep(config['ssp']['ams']['poll_interval'])
+    log.info('Exit script')

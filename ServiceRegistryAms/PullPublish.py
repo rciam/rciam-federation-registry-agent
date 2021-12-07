@@ -4,12 +4,10 @@ from argo_ams_library import ArgoMessagingService,AmsMessage, AmsException
 
 class PullPublish():
     def __init__(self,config):
-        with open("config.json") as json_data_file:
-            data = json.load(json_data_file)
         self.pull_sub = config['pull_sub']
         self.pub_topic = config['pub_topic']
         self.pull_topic = config['pull_topic']
-        self.ams = ArgoMessagingService(endpoint=data['host'], token=config['token'], project=config['project'])
+        self.ams = ArgoMessagingService(endpoint=config['host'], token=config['token'], project=config['project'])
 
     def pull(self,nummsgs):
         messages = []
@@ -28,16 +26,17 @@ class PullPublish():
             data = msg.get_data()
             msgid = msg.get_msgid()
             attr = msg.get_attr()
-            messages.append(json.loads(data))
+            messages.append(json.loads(data.decode("utf-8")))
             #print('msgid={0}, data={1}, attr={2}'.format(msgid, data, attr))
             ackids.append(id)
+        return messages, ackids
 
+    def ack(self,ackids):
         # pass list of extracted ackIds to AMS Service so that
         # it can move the offset for the next subscription pull
         # (basically acknowledging pulled messages)
         if ackids:
             self.ams.ack_sub(self.pull_sub, ackids)
-        return messages
 
     def publish(self,messages):
         # messages = [{data:[{id:1},{state:'deployed'}],attributes=''}]
