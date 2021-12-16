@@ -44,6 +44,8 @@ def format_mitreid_msg(msg):
         msgNew['idTokenValiditySeconds'] = msgNew.pop('idTokenTimeoutSeconds')
     if 'externalId' in msgNew:
         msgNew.pop('externalId')
+    if 'createdAt' in msgNew:
+        msgNew.pop('createdAt')
     if 'tokenEndpointAuthMethod' in msgNew:
         msgNew['tokenEndpointAuthMethod'] = map_token_endpoint_value(msgNew['tokenEndpointAuthMethod'])
     if 'aupUri' in msgNew:
