@@ -1,6 +1,6 @@
 {
-  "host": "msg-devel.argo.grnet.gr",
+  "host": "msg.argo.grnet.gr",
   "project" : "rciam-service-registry",
-  "token" : "25bbd90ba4bb38df217bf02c5369dff30bb524a0ad0c4a5666bba602ee01d794",
+  "token" : "aa4c25a2c7696a161adfe50b5328a4b35d2d8bf75dc980854be2bb1249e36392",
   "pub_topic": "_deployment_response"
 }
