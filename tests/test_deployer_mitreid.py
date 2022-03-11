@@ -24,7 +24,7 @@ class TestDeployerSsp(unittest.TestCase):
         new_service = {"client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1", "type": "technical"},{"name": "name2", "email":"email2", "type": "security"}]}
         out_service = {"clientId": "testId1", "clientName": "testName1", "clientDescription": "testDescription1", "contacts":["email1"]}
 
-        func_result = deployer_mitreid.format_mitreid_msg(new_service)
+        func_result = deployer_mitreid.format_mitreid_msg(new_service,'create')
         self.assertEqual(func_result, out_service)
 
     # Test calling mitre id to create a new entry
