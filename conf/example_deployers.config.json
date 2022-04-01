@@ -32,5 +32,22 @@
         "client_id": "client ID",
         "client_secret": "client secret"
     },
+    "keycloak": {
+        "ams": {
+            "host": "example.host.com",
+            "project": "ams-project-name-mitreid",
+            "pull_topic": "ams-topic-mitreid",
+            "pull_sub": "ams-sub-mitreid",
+            "token": "ams-token-mitreid",
+            "pub_topic": "ams-publish-topic-mitreid",
+            "poll_interval": 1,
+            "agent_id": "1"
+        },
+        "issuer": "https://example.com/oidc",
+        "refresh_token": "refresh token",
+        "client_id": "client ID",
+        "client_secret": "client secret",
+        "default_client_scopes": []
+    },
     "log_conf": "conf/logger.conf"
 }
