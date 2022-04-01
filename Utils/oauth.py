@@ -16,24 +16,27 @@ def refreshTokenGrant(issuer, refreshToken, clientId, clientSecret):
     extra = {"client_id": clientId, "client_secret": clientSecret}
 
     try:
-        print('Get access token from ' + issuer)
+        print("Get access token from " + issuer)
         provider = OAuth2Session()
         response = provider.refresh_token(tokenUrl, refreshToken, **extra)
     except:
-        print('Failed to get access token')
+        print("Failed to get access token")
         raise SystemExit(1)
     return response["access_token"]
+
 
 def clientCredentialsGrant(issuer, clientId, clientSecret):
     tokenUrl = issuer + "/protocol/openid-connect/token"
 
     try:
-        print('[clientCredentialsGrant] Get access token from ' + issuer)
+        print("[clientCredentialsGrant] Get access token from " + issuer)
         client = BackendApplicationClient(client_id=clientId)
         oauth = OAuth2Session(client=client)
-        response = oauth.fetch_token(token_url=tokenUrl, client_id=clientId, client_secret=clientSecret)
-        print('[clientCredentialsGrant] Access Token: ' + response["access_token"])
+        response = oauth.fetch_token(
+            token_url=tokenUrl, client_id=clientId, client_secret=clientSecret
+        )
+        print("[clientCredentialsGrant] Access Token: " + response["access_token"])
     except:
-        print('[clientCredentialsGrant] Failed to get access token')
+        print("[clientCredentialsGrant] Failed to get access token")
         raise SystemExit(1)
     return response["access_token"]
