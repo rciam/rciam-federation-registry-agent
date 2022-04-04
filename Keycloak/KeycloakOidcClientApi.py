@@ -93,6 +93,44 @@ class KeycloakOidcClientApi:
         return self.httpRequest("DELETE", url, header)
 
     """
+    Get OIDC client's "Permissions"
+
+    Parameters:
+        keycloak_id (str): The keycloak_id of the client
+    
+    Returns:
+        response (JSON Object): The response from the Client AuthZ Permissions API
+    """
+
+    def getClientAuthzPermissions(self, keycloak_id):
+        url = self.issuer + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) +"/management/permissions"
+        header = {"Authorization": "Bearer " + self.token}
+
+        return self.httpRequest("GET", url, header)
+
+    """
+    Enable OIDC client's "Permissions"
+
+    Parameters:
+        keycloak_id (str): The keycloak_id of the client
+        action (str): "enable" or "disable" Client Authorization Permissions
+    
+    Returns:
+        response (JSON Object): The registered client in JSON format
+    """
+
+    def updateClientAuthzPermissions(self, keycloak_id, action):
+        url = self.issuer + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) +"/management/permissions"
+        header = {"Authorization": "Bearer " + self.token}
+        if action == "enable":
+            enabled = "true"
+        elif action == "disable":
+            enabled = "false"
+        client_object = '{"enabled": ' + enabled + '}'
+
+        return self.httpRequest("PUT", url, header, client_object)
+
+    """
     Wrapper function for Python requests
 
     Parameters:

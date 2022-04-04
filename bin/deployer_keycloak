@@ -12,7 +12,7 @@ from Utils.oauth import clientCredentialsGrant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonTemplate = '{"consentRequired":true,"standardFlowEnabled":false,"serviceAccountsEnabled":false,"implicitFlowEnabled":false,"publicClient":false,"attributes":{"oauth2.device.authorization.grant.enabled":false,"client_credentials.use_refresh_token":"false","oidc.ciba.grant.enabled": "false","use.jwks.string":false,"use.jwks.url":"false","use.refresh.tokens":"false"}}'
+jsonTemplate = '{"consentRequired":true,"standardFlowEnabled":false,"serviceAccountsEnabled":false,"implicitFlowEnabled":false,"publicClient":false,"attributes":{"oauth2.device.authorization.grant.enabled":false,"oauth2.token.exchange.grant.enabled":false,"client_credentials.use_refresh_token":"false","oidc.ciba.grant.enabled": "false","use.jwks.string":false,"use.jwks.url":"false","use.refresh.tokens":"false"}}'
 
 
 def map_token_endpoint_value(key):
@@ -30,10 +30,10 @@ def map_token_endpoint_value(key):
 
 # format_keycloak_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from Keycloak API
-def format_keycloak_msg(msg, config):
+def format_keycloak_msg(msg, realm_default_client_scopes):
     msg = json.loads(msg)
     new_msg = json.loads(jsonTemplate)
-    new_msg["defaultClientScopes"] = config["default_client_scopes"]
+    new_msg["defaultClientScopes"] = realm_default_client_scopes
     emails = []
     if "service_name" in msg:
         new_msg["name"] = msg.pop("service_name")
@@ -68,9 +68,8 @@ def format_keycloak_msg(msg, config):
                 new_msg["standardFlowEnabled"] = True
             if grant_type == "client_credentials":
                 new_msg["serviceAccountsEnabled"] = True
-            # TODO
-            # if grant_type == 'urn:ietf:params:oauth:grant-type:token-exchange':
-            #     new_msg['attributes']['oauth2.device.authorization.grant.enabled'] = True
+            if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
+                new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
             if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
                 new_msg["attributes"][
                     "oauth2.device.authorization.grant.enabled"
@@ -178,7 +177,11 @@ def publish_ams(pub_messages, ams_agent):
 # - edit
 def call_keycloak(registry_message, keycloak_agent):
     deployment_type = registry_message.pop("deployment_type")
-    keycloak_msg = format_keycloak_msg(registry_message, deployment_type)
+    realm_default_client_scopes = keycloak_agent.getRealmDefaultClientScopes()
+    default_client_scopes = []
+    for scope in realm_default_client_scopes["response"]:
+        default_client_scopes.append(scope["name"])
+    keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
     log.debug("Formated message for Keycloak: " + str(keycloak_msg))
     response = {}
     external_id = -1
@@ -189,6 +192,8 @@ def call_keycloak(registry_message, keycloak_agent):
         if response["status"] == 200:
             external_id = response["response"]["id"]
             client_id = response["response"]["clientId"]
+        if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"]:
+            keycloak_agent.updateClientAuthzPermissions(external_id, "enable")
     elif deployment_type == "delete":
         external_id = registry_message["external_id"]
         log.info("Delete client with id: " + str(external_id))
@@ -201,6 +206,17 @@ def call_keycloak(registry_message, keycloak_agent):
         )
         if response["status"] == 200:
             client_id = response["response"]["clientId"]
+        client_authz_permissions_response = keycloak_agent.getClientAuthzPermissions(external_id)
+        if (
+            client_authz_permissions_response["response"]["enabled"] == False
+            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == "true"
+        ):
+            keycloak_agent.updateClientAuthzPermissions(external_id, "enable")
+        elif (
+            client_authz_permissions_response["response"]["enabled"] == True
+            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == "false"
+        ):
+            keycloak_agent.updateClientAuthzPermissions(external_id, "disable")
     return response, external_id, client_id
 
 
