@@ -165,6 +165,19 @@ class KeycloakOidcClientApi:
         return self.httpRequest("PUT", url, header, client_object)
 
     """
+    Get realm default client scopes
+    
+    Returns:
+        response (JSON Object): A registered client in JSON format
+    """
+
+    def getRealmDefaultClientScopes(self):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/default-default-client-scopes"
+        header = {"Authorization": "Bearer " + self.token}
+
+        return self.httpRequest("GET", url, header)
+
+    """
     Wrapper function for Python requests
 
     Parameters:

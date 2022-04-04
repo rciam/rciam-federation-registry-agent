@@ -14,8 +14,7 @@
     "realm": "example",
     "refresh_token": "refresh token",
     "client_id": "client ID",
-    "client_secret": "client secret",
-    "default_client_scopes": []
+    "client_secret": "client secret"
   },
   "log_conf": "conf/logger.conf",
   "mitreid": {
