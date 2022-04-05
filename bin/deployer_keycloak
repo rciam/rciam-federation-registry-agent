@@ -3,7 +3,7 @@
 import json, time
 import argparse
 import logging
-from Utils.common import get_log_conf, create_ams_response
+from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
 from ServiceRegistryAms.PullPublish import PullPublish
 from Keycloak.KeycloakOidcClientApi import KeycloakOidcClientApi
 from Utils.oauth import clientCredentialsGrant
@@ -124,15 +124,16 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 
 # This function will gain an access token from the provided issuer and it will
 # make a POST request using KeycloakOidcClientApi to update or create the client
-#    Function update_data gets 3 arguments:
+#    Function update_data gets 4 arguments:
 #    - messages, the new incoming messages in json
-#    - issuer_url, the url of the issuer
+#    - auth_server, the url of the AuthZ Server
+#    - realm, the name of the realm
 #    - access_token
 #    - agent_id
-def update_data(messages, issuer_url, access_token, agent_id):
+def update_data(messages, auth_server, realm, access_token, agent_id):
     pub_messages = []  # messages to be published
     keycloak_agent = KeycloakOidcClientApi(
-        issuer_url, access_token
+        auth_server, realm, access_token
     )  # Create Keycloak agent
     for msg in messages:
         log.debug("Message from ams: " + str(msg))
@@ -246,16 +247,17 @@ if __name__ == "__main__":
         messages, ids = ams.pull(1)
         log.info("Received " + str(len(messages)) + " messages from ams")
         if len(messages) > 0:
-            log.info("Get access token from " + config["keycloak"]["issuer"])
+            log.info("Get access token from " + config["keycloak"]["auth_server"])
             access_token = clientCredentialsGrant(
-                config["keycloak"]["issuer"],
+                get_keycloak_issuer(config["keycloak"]),
                 config["keycloak"]["client_id"],
                 config["keycloak"]["client_secret"],
             )
             ams.ack(ids)
             responses = update_data(
                 messages,
-                config["keycloak"]["issuer"],
+                config["keycloak"]["auth_server"],
+                config["keycloak"]["realm"],
                 access_token,
                 config["keycloak"]["ams"]["agent_id"],
             )
