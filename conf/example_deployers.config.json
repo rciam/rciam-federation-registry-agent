@@ -10,7 +10,8 @@
       "poll_interval": 1,
       "agent_id": "1"
     },
-    "issuer": "https://example.com/oidc",
+    "auth_server": "https://example.com/auth",
+    "realm": "example",
     "refresh_token": "refresh token",
     "client_id": "client ID",
     "client_secret": "client secret",
