@@ -6,7 +6,7 @@ import logging
 from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
 from ServiceRegistryAms.PullPublish import PullPublish
 from Keycloak.KeycloakOidcClientApi import KeycloakOidcClientApi
-from Utils.oauth import clientCredentialsGrant
+from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 
 # Setup logger
 log = logging.getLogger(__name__)
@@ -248,11 +248,19 @@ if __name__ == "__main__":
         log.info("Received " + str(len(messages)) + " messages from ams")
         if len(messages) > 0:
             log.info("Get access token from " + config["keycloak"]["auth_server"])
-            access_token = clientCredentialsGrant(
-                get_keycloak_issuer(config["keycloak"]),
-                config["keycloak"]["client_id"],
-                config["keycloak"]["client_secret"],
-            )
+            if "refresh_token" in config["keycloak"]:
+                access_token = refreshTokenGrant(
+                    get_keycloak_issuer(config["keycloak"]),
+                    config["keycloak"]["refresh_token"],
+                    config["keycloak"]["client_id"],
+                    config["keycloak"]["client_secret"],
+                )
+            else:
+                access_token = clientCredentialsGrant(
+                    get_keycloak_issuer(config["keycloak"]),
+                    config["keycloak"]["client_id"],
+                    config["keycloak"]["client_secret"],
+                )
             ams.ack(ids)
             responses = update_data(
                 messages,
