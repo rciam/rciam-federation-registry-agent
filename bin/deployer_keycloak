@@ -12,7 +12,7 @@ from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonTemplate = '{"consentRequired":true,"standardFlowEnabled":false,"serviceAccountsEnabled":false,"implicitFlowEnabled":false,"publicClient":false,"attributes":{"oauth2.device.authorization.grant.enabled":false,"oauth2.token.exchange.grant.enabled":false,"client_credentials.use_refresh_token":"false","oidc.ciba.grant.enabled": "false","use.jwks.string":false,"use.jwks.url":"false","use.refresh.tokens":"false"}}'
+jsonTemplate = '{"consentRequired":"true","standardFlowEnabled":"false","serviceAccountsEnabled":"false","implicitFlowEnabled":"false","publicClient":"false","attributes":{"oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":"false","client_credentials.use_refresh_token":"false","oidc.ciba.grant.enabled":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"}}'
 
 
 def map_token_endpoint_value(key):
@@ -31,7 +31,6 @@ def map_token_endpoint_value(key):
 # format_keycloak_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from Keycloak API
 def format_keycloak_msg(msg, realm_default_client_scopes):
-    msg = json.loads(msg)
     new_msg = json.loads(jsonTemplate)
     new_msg["defaultClientScopes"] = realm_default_client_scopes
     emails = []
@@ -118,7 +117,6 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         new_msg["attributes"]["oauth2.device.code.lifespan"] = msg.pop(
             "device_code_validity_seconds"
         )
-    print(json.dumps(new_msg))
     return new_msg
 
 
