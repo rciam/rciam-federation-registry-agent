@@ -1,7 +1,7 @@
 # rciam-federation-registry-agent
 
 **RCIAM Federation Registry Agent** main objective is to sync data between RCIAM Federation Registry and
-Keycloak/MITREid Connect/SimpleSAMLphp.
+different identity and access management solutions, such as Keycloak, SATOSA, SimpleSAMLphp and MITREid Connect.
 This python library includes a module named `ServiceRegistryAms/` to pull and publish messages from ARGO Messaging
 Service using the argo-ams-library, an API module named `MitreidConnect/` to communicate with the API of the MITREid, an
 API module named `Keycloak/` to communicate with the API of the Keycloak.
@@ -53,27 +53,26 @@ deployer_ssp -c example_deployers.config.json
 
 ## Configuration
 
-Here is a description with the values that the MITREid and SSP conf file must include
-example_deployers.config.json
+An example of the required configuration file can be found in conf/example_deployers.config.json. The different
+configuration options are described below.
 
 ```json
 {
   "keycloak": {
     "ams": {
       "host": "example.host.com",
-      "project": "ams-project-name-mitreid",
-      "pull_topic": "ams-topic-mitreid",
-      "pull_sub": "ams-sub-mitreid",
-      "token": "ams-token-mitreid",
-      "pub_topic": "ams-publish-topic-mitreid",
+      "project": "ams-project-name-keycloak",
+      "pull_topic": "ams-topic-keycloak",
+      "pull_sub": "ams-sub-keycloak",
+      "token": "ams-token-keycloak",
+      "pub_topic": "ams-publish-topic-keycloak",
       "poll_interval": 1,
       "agent_id": "1"
     },
-    "issuer": "https://example.com/oidc",
-    "refresh_token": "refresh token",
+    "auth_server": "https://example.com/auth",
+    "realm": "example",
     "client_id": "client ID",
-    "client_secret": "client secret",
-    "default_client_scopes": []
+    "client_secret": "client secret"
   },
   "mitreid": {
     "ams": {
@@ -112,10 +111,10 @@ example_deployers.config.json
 }
 ```
 
-As shown above there are 2 main groups MITREid and SSP, for each group there are unique AMS settings and service
-specific configuration values. The only global value is the `log_conf` path if you want to use the same logging
-configuration for both of the deployers. In case you need a different configuration for a deployer you can add log_conf
-in the scope of "MITREid" or "SSP"
+As shown above there are three main groups, namely Keycloak, MITREid and SSP and each group can have its own AMS
+settings and service specific configuration values. The only global value is the `log_conf` path if you want to use the
+same logging configuration for both of the deployers. In case you need a different configuration for a deployer you can
+add log_conf in the scope of "MITREid" or "SSP".
 
 ### ServiceRegistryAms
 
