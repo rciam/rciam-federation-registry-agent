@@ -49,8 +49,11 @@ def format_mitreid_msg(msg, deployment_type):
         if deployment_type == 'create':
             msgNew.pop('createdAt')
         elif deployment_type == 'edit':
-            d = datetime.strptime(msgNew['createdAt'],"%Y-%m-%dT%H:%M:%S.%f")
-            msgNew['createdAt'] = d.strftime("%Y-%m-%dT%H:%M:%S+0000")
+            try:
+                d = datetime.strptime(msgNew['createdAt'][:19],"%Y-%m-%dT%H:%M:%S")
+                msgNew['createdAt'] = d.strftime("%Y-%m-%dT%H:%M:%S+0000")
+            except ValueError as err:
+                log.critical(err)
     if 'tokenEndpointAuthMethod' in msgNew:
         msgNew['tokenEndpointAuthMethod'] = map_token_endpoint_value(msgNew['tokenEndpointAuthMethod'])
     if 'aupUri' in msgNew:
