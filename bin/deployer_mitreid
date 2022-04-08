@@ -3,6 +3,7 @@
 import json, time
 import argparse
 import logging
+from datetime import datetime
 from Utils.common import get_log_conf, create_ams_response
 from ServiceRegistryAms.PullPublish import PullPublish
 from MitreidConnect.MitreidClientApi import mitreidClientApi
@@ -25,7 +26,7 @@ def map_token_endpoint_value(key):
 
 # format_mitreid_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from mitreID API
-def format_mitreid_msg(msg):
+def format_mitreid_msg(msg, deployment_type):
     msgNew = {}
     emails=[]
     for key in msg.keys():
@@ -45,7 +46,11 @@ def format_mitreid_msg(msg):
     if 'externalId' in msgNew:
         msgNew.pop('externalId')
     if 'createdAt' in msgNew:
-        msgNew.pop('createdAt')
+        if deployment_type == 'create':
+            msgNew.pop('createdAt')
+        elif deployment_type == 'edit':
+            d = datetime.strptime(msgNew['createdAt'],"%Y-%m-%dT%H:%M:%S.%f")
+            msgNew['createdAt'] = d.strftime("%Y-%m-%dT%H:%M:%S+0000")
     if 'tokenEndpointAuthMethod' in msgNew:
         msgNew['tokenEndpointAuthMethod'] = map_token_endpoint_value(msgNew['tokenEndpointAuthMethod'])
     if 'aupUri' in msgNew:
@@ -98,7 +103,7 @@ def publish_ams(pub_messages, ams_agent):
 # - edit
 def call_mitreid(registry_message,mitreid_agent):
     deployment_type = registry_message.pop('deployment_type')
-    mitreid_msg = format_mitreid_msg(registry_message)
+    mitreid_msg = format_mitreid_msg(registry_message, deployment_type)
     log.debug('Formated message for mitreId: ' + str(mitreid_msg))
     response = {}
     external_id = -1
