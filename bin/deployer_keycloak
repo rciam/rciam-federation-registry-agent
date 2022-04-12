@@ -113,8 +113,8 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
             new_msg["attributes"]["access.token.lifespan"] = msg.pop(
                 "access_token_validity_seconds"
             )
-    if 'id_token_timeout_seconds' in msg:
-        new_msg['attributes']['id.token.lifespan'] = msg.pop('id_token_timeout_seconds')
+    if "id_token_timeout_seconds" in msg:
+        new_msg["attributes"]["id.token.lifespan"] = msg.pop("id_token_timeout_seconds")
     if "device_code_validity_seconds" in msg:
         new_msg["attributes"]["oauth2.device.code.lifespan"] = msg.pop(
             "device_code_validity_seconds"
