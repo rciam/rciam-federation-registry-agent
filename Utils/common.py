@@ -30,3 +30,15 @@ def create_ams_response(response, service_id, agent_id, external_id, client_id):
         msgNew['state'] = 'deployed'
 
     return  msgNew
+
+"""
+Method that creates the Keycloak issuer based on `auth_server` + `realm`
+
+Parameters:
+    config (dict): Keycloak's config options
+
+Returns:
+    return (string): Keycloak's issuer URL
+"""
+def get_keycloak_issuer(config):
+    return config['auth_server'] + "/realms/" + config['realm']
