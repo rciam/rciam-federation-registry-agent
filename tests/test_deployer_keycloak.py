@@ -33,21 +33,21 @@ class TestDeployerKeycloak(unittest.TestCase):
             ],
         }
         out_service = {
-            "consentRequired": "true",
-            "standardFlowEnabled": "false",
-            "serviceAccountsEnabled": "false",
-            "implicitFlowEnabled": "false",
-            "publicClient": "false",
             "attributes": {
+                "client_credentials.use_refresh_token": "false",
                 "oauth2.device.authorization.grant.enabled": "false",
                 "oauth2.token.exchange.grant.enabled": "false",
-                "client_credentials.use_refresh_token": "false",
                 "oidc.ciba.grant.enabled": "false",
                 "use.jwks.string": "false",
                 "use.jwks.url": "false",
                 "use.refresh.tokens": "false",
                 "contacts": "email1"
             },
+            "consentRequired": "true",
+            "implicitFlowEnabled": "false",
+            "publicClient": "false",
+            "serviceAccountsEnabled": "false",
+            "standardFlowEnabled": "false",
             "defaultClientScopes": [
                 "example"
             ],
@@ -73,21 +73,21 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
         out_service = {
             "response": {
-                "consentRequired": "true",
-                "standardFlowEnabled": "false",
-                "serviceAccountsEnabled": "false",
-                "implicitFlowEnabled": "false",
-                "publicClient": "false",
                 "attributes": {
+                    "client_credentials.use_refresh_token": "false",
                     "oauth2.device.authorization.grant.enabled": "false",
                     "oauth2.token.exchange.grant.enabled": "false",
-                    "client_credentials.use_refresh_token": "false",
                     "oidc.ciba.grant.enabled": "false",
                     "use.jwks.string": "false",
                     "use.jwks.url": "false",
                     "use.refresh.tokens": "false",
                     "contacts": "email1"
                 },
+                "consentRequired": "true",
+                "implicitFlowEnabled": "false",
+                "publicClient": "false",
+                "serviceAccountsEnabled": "false",
+                "standardFlowEnabled": "false",
                 "clientId": "testId1",
                 "name": "testName1",
                 "description": "testDescription1",
@@ -127,27 +127,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "deployment_type": "delete",
         }
         out_service = {
-            "response": {
-                "consentRequired": "true",
-                "standardFlowEnabled": "false",
-                "serviceAccountsEnabled": "false",
-                "implicitFlowEnabled": "false",
-                "publicClient": "false",
-                "attributes": {
-                    "oauth2.device.authorization.grant.enabled": "false",
-                    "oauth2.token.exchange.grant.enabled": "false",
-                    "client_credentials.use_refresh_token": "false",
-                    "oidc.ciba.grant.enabled": "false",
-                    "use.jwks.string": "false",
-                    "use.jwks.url": "false",
-                    "use.refresh.tokens": "false",
-                    "contacts": "email1"
-                },
-                "clientId": "testId1",
-                "name": "testName1",
-                "description": "testDescription1",
-                "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
-            },
+            "response": "OK",
             "status": 200,
         }
         realm_default_client_scopes = {
@@ -183,21 +163,21 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
         out_service = {
             "response": {
-                "consentRequired": "true",
-                "standardFlowEnabled": "false",
-                "serviceAccountsEnabled": "false",
-                "implicitFlowEnabled": "false",
-                "publicClient": "false",
                 "attributes": {
+                    "client_credentials.use_refresh_token": "false",
                     "oauth2.device.authorization.grant.enabled": "false",
                     "oauth2.token.exchange.grant.enabled": "false",
-                    "client_credentials.use_refresh_token": "false",
                     "oidc.ciba.grant.enabled": "false",
                     "use.jwks.string": "false",
                     "use.jwks.url": "false",
                     "use.refresh.tokens": "false",
                     "contacts": "email1"
                 },
+                "consentRequired": "true",
+                "implicitFlowEnabled": "false",
+                "publicClient": "false",
+                "serviceAccountsEnabled": "false",
+                "standardFlowEnabled": "false",
                 "clientId": "testId1",
                 "name": "testName1",
                 "description": "testDescription1",

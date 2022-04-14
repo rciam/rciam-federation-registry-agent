@@ -12,7 +12,7 @@ from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":"false","oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"true","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":"true","implicitFlowEnabled":"false","publicClient":"false","serviceAccountsEnabled":"false","standardFlowEnabled":"false"}'
+jsonTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":"false","oidc.ciba.grant.enabled":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":"true","implicitFlowEnabled":"false","publicClient":"false","serviceAccountsEnabled":"false","standardFlowEnabled":"false"}'
 
 
 def map_token_endpoint_value(key):
@@ -94,14 +94,11 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         new_msg["attributes"]["use.jwks.url"] = True
         new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
     if "refresh_token_validity_seconds" in msg:
-        new_msg["attributes"]["client.offline.session.idle.timeout"] = msg[
-            "refresh_token_validity_seconds"
-        ]
         new_msg["attributes"]["client.offline.session.max.lifespan"] = msg.pop(
             "refresh_token_validity_seconds"
         )
-        if "reuse_refresh_token" in msg:
-            new_msg["attributes"]["revoke.refresh.token"] = msg.pop("reuse_refresh_token")
+        # if "reuse_refresh_token" in msg:
+        #     new_msg["attributes"]["revoke.refresh.token"] = msg.pop("reuse_refresh_token")
     if "code_challenge_method" in msg:
         new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop(
             "code_challenge_method"
