@@ -2,10 +2,10 @@
     "egi": 
         [ 
             {
-                "topic": "_egi_service_mitreid_development",
+                "topic": "_egi_service_keykloak_development",
                 "integration_environment": "development",
                 "protocol":"oidc",
-                "subs": ["_egi_service_oidc_mitreid_developent_1"]
+                "subs": ["_egi_service_oidc_keykloak_development_15"]
             },
             {
                 "topic": "_egi_service_mitreid_production",
