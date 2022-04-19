@@ -1,7 +1,7 @@
 import json, sched, time
 import inquirer
 import uuid
-from ServiceRegistryAms import PullPublish
+from ServiceRegistryAms.PullPublish import PullPublish
 with open("ams-config.json") as json_data_file:
     config = json.load(json_data_file)
 with open("topics-subs-config.json") as json_data_file:
