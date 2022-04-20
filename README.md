@@ -5,16 +5,10 @@ using the argo-ams-library python library.
 
 ## Dependencies
 
-We need to install the argo-ams-library
+Install the packages from the requirements.txt file
 
 ```shell
-pip install argo-ams-library
-```
-
-and the inquirer module
-
-```shell
-pip install inquirer
+pip install -r requirements.txt
 ```
 
 ## Running
