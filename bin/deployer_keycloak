@@ -137,7 +137,7 @@ def update_data(messages, auth_server, realm, access_token, agent_id):
         service_id = msg.pop(
             "id"
         )  # Remove rciam service id to make request to Keycloak
-        external_id = -1
+        external_id = ""
         client_id = ""
         try:
             response, external_id, client_id = call_keycloak(msg, keycloak_agent)
@@ -182,7 +182,7 @@ def call_keycloak(registry_message, keycloak_agent):
     keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
     log.debug("Formated message for Keycloak: " + str(keycloak_msg))
     response = {}
-    external_id = -1
+    external_id = ""
     client_id = ""
     if deployment_type == "create":
         log.info("Create new client")

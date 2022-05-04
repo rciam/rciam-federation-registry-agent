@@ -17,7 +17,7 @@ def create_ams_response(response, service_id, agent_id, external_id, client_id):
     msgNew['id'] = service_id
     msgNew['agent_id'] = agent_id
     msgNew['status_code'] = response['status']
-    if external_id>0:
+    if len(external_id)>0:
         msgNew['external_id'] = external_id
 
     if len(client_id)>0:
