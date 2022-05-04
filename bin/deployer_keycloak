@@ -187,7 +187,7 @@ def call_keycloak(registry_message, keycloak_agent):
     if deployment_type == "create":
         log.info("Create new client")
         response = keycloak_agent.createClient(keycloak_msg)
-        if response["status"] == 200:
+        if response["status"] == 201:
             client_id = response["response"]["clientId"]
             response_external_id = keycloak_agent.getClientById(client_id)
             external_id = response_external_id["response"]["id"]

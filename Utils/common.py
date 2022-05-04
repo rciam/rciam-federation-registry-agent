@@ -23,7 +23,7 @@ def create_ams_response(response, service_id, agent_id, external_id, client_id):
     if len(client_id)>0:
         msgNew['client_id'] = client_id
 
-    if response['status'] != 200:
+    if response['status'] != 200 and response['status'] != 201 and response['status'] != 204:
         msgNew['error_description'] = response['error']
         msgNew['state'] = 'error'
     else:
