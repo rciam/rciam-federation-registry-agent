@@ -188,22 +188,20 @@ def call_keycloak(registry_message, keycloak_agent):
         log.info("Create new client")
         response = keycloak_agent.createClient(keycloak_msg)
         if response["status"] == 200:
-            external_id = response["response"]["id"]
             client_id = response["response"]["clientId"]
+            response_external_id = keycloak_agent.getClientById(client_id)
+            external_id = response_external_id["response"]["id"]
         if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"]:
             keycloak_agent.updateClientAuthzPermissions(external_id, "enable")
     elif deployment_type == "delete":
-        external_id = registry_message["external_id"]
-        log.info("Delete client with id: " + str(external_id))
-        response = keycloak_agent.deleteClientById(registry_message["external_id"])
+        client_id = keycloak_msg["clientId"]
+        log.info("Delete client with id: " + str(client_id))
+        response = keycloak_agent.deleteClientById(client_id)
     elif deployment_type == "edit":
         external_id = registry_message["external_id"]
-        log.info("Update client with id: " + str(external_id))
-        response = keycloak_agent.updateClientById(
-            registry_message["external_id"], keycloak_msg
-        )
-        if response["status"] == 200:
-            client_id = response["response"]["clientId"]
+        client_id = keycloak_msg["clientId"]
+        log.info("Update client with id: " + str(client_id))
+        response = keycloak_agent.updateClientById(client_id, keycloak_msg)
         client_authz_permissions_response = keycloak_agent.getClientAuthzPermissions(external_id)
         if (
             client_authz_permissions_response["response"]["enabled"] == False
