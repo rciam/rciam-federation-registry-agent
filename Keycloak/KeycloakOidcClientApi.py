@@ -157,10 +157,10 @@ class KeycloakOidcClientApi:
         )
         header = {"Authorization": "Bearer " + self.token}
         if action == "enable":
-            enabled = "true"
+            enabled = True
         elif action == "disable":
-            enabled = "false"
-        client_object = '{"enabled": ' + enabled + "}"
+            enabled = False
+        client_object = {"enabled": enabled }
 
         return self.httpRequest("PUT", url, header, client_object)
 
