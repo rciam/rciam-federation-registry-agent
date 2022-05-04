@@ -32,9 +32,7 @@ def clientCredentialsGrant(issuer, clientId, clientSecret):
         print("[clientCredentialsGrant] Get access token from " + issuer)
         client = BackendApplicationClient(client_id=clientId)
         oauth = OAuth2Session(client=client)
-        response = oauth.fetch_token(
-            token_url=tokenUrl, client_id=clientId, client_secret=clientSecret
-        )
+        response = oauth.fetch_token(token_url=tokenUrl, client_id=clientId, client_secret=clientSecret)
         print("[clientCredentialsGrant] Access Token: " + response["access_token"])
     except:
         print("[clientCredentialsGrant] Failed to get access token")

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import json, time
+import json
+import time
 import argparse
 import logging
 from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
@@ -70,23 +71,17 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
             if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
                 new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
             if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
-                new_msg["attributes"][
-                    "oauth2.device.authorization.grant.enabled"
-                ] = True
+                new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
             if grant_type == "implicit":
                 new_msg["implicitFlowEnabled"] = True
     if "token_endpoint_auth_method" in msg:
         if msg["token_endpoint_auth_method"] == "none":
             new_msg["publicClient"] = True
-        new_msg["clientAuthenticatorType"] = map_token_endpoint_value(
-            msg.pop("token_endpoint_auth_method")
-        )
+        new_msg["clientAuthenticatorType"] = map_token_endpoint_value(msg.pop("token_endpoint_auth_method"))
     if "client_secret" in msg:
         new_msg["secret"] = msg.pop("client_secret")
     if "token_endpoint_auth_signing_alg" in msg:
-        new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop(
-            "token_endpoint_auth_signing_alg"
-        )
+        new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop("token_endpoint_auth_signing_alg")
     if "jwks" in msg:
         new_msg["attributes"]["use.jwks.string"] = "true"
         new_msg["attributes"]["jwks.string"] = json.dumps(msg.pop("jwks"))
@@ -99,9 +94,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         if "reuse_refresh_token" in msg:
             new_msg["attributes"]["revoke.refresh.token"] = str(msg.pop("reuse_refresh_token"))
     if "code_challenge_method" in msg:
-        new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop(
-            "code_challenge_method"
-        )
+        new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
     if "access_token_validity_seconds" in msg:
         if msg["access_token_validity_seconds"] < 60:
             new_msg["attributes"]["access.token.lifespan"] = "60"
@@ -123,23 +116,20 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 #    - access_token
 #    - agent_id
 def update_data(messages, auth_server, realm, access_token, agent_id):
-    pub_messages = []  # messages to be published
-    keycloak_agent = KeycloakOidcClientApi(
-        auth_server, realm, access_token
-    )  # Create Keycloak agent
+    # messages to be published
+    pub_messages = []
+    # Create Keycloak agent
+    keycloak_agent = KeycloakOidcClientApi(auth_server, realm, access_token)
     for msg in messages:
         log.debug("Message from ams: " + str(msg))
-        service_id = msg.pop(
-            "id"
-        )  # Remove rciam service id to make request to Keycloak
+        # Remove rciam service id to make request to Keycloak
+        service_id = msg.pop("id")
         external_id = ""
         client_id = ""
         try:
             response, external_id, client_id = call_keycloak(msg, keycloak_agent)
             log.info("Message received from Keycloak: " + str(response))
-            ams_message = create_ams_response(
-                response, service_id, agent_id, external_id, client_id
-            )
+            ams_message = create_ams_response(response, service_id, agent_id, external_id, client_id)
         except:
             log.critical("Exception catch, return error to ams")
             ams_message = create_ams_response(
@@ -214,9 +204,7 @@ def call_keycloak(registry_message, keycloak_agent):
 if __name__ == "__main__":
     # Get config path from arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-c", required=True, type=str, help="Configuration file location path"
-    )
+    parser.add_argument("-c", required=True, type=str, help="Configuration file location path")
     args = parser.parse_args()
     path = args.c
     with open(path) as json_data_file:

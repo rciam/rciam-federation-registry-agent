@@ -34,13 +34,7 @@ class KeycloakOidcClientApi:
     """
 
     def getClientById(self, client_id):
-        url = (
-            self.auth_url
-            + "/realms/"
-            + self.realm
-            + "/clients-registrations/default/"
-            + str(client_id)
-        )
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
         header = {"Authorization": "Bearer " + self.token}
 
         return self.httpRequest("GET", url, header)
@@ -76,13 +70,7 @@ class KeycloakOidcClientApi:
     """
 
     def updateClientById(self, client_id, client_object):
-        url = (
-            self.auth_url
-            + "/realms/"
-            + self.realm
-            + "/clients-registrations/default/"
-            + str(client_id)
-        )
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
         header = {
             "Authorization": "Bearer " + self.token,
             "Content-Type": "application/json",
@@ -101,13 +89,7 @@ class KeycloakOidcClientApi:
     """
 
     def deleteClientById(self, client_id):
-        url = (
-            self.auth_url
-            + "/realms/"
-            + self.realm
-            + "/clients-registrations/default/"
-            + str(client_id)
-        )
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
         header = {"Authorization": "Bearer " + self.token}
 
         return self.httpRequest("DELETE", url, header)
@@ -123,14 +105,7 @@ class KeycloakOidcClientApi:
     """
 
     def getClientAuthzPermissions(self, keycloak_id):
-        url = (
-            self.auth_url
-            + "/admin/realms/"
-            + self.realm
-            + "/clients/"
-            + str(keycloak_id)
-            + "/management/permissions"
-        )
+        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) + "/management/permissions"
         header = {"Authorization": "Bearer " + self.token}
 
         return self.httpRequest("GET", url, header)
@@ -147,20 +122,13 @@ class KeycloakOidcClientApi:
     """
 
     def updateClientAuthzPermissions(self, keycloak_id, action):
-        url = (
-            self.auth_url
-            + "/admin/realms/"
-            + self.realm
-            + "/clients/"
-            + str(keycloak_id)
-            + "/management/permissions"
-        )
+        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) + "/management/permissions"
         header = {"Authorization": "Bearer " + self.token}
         if action == "enable":
             enabled = True
         elif action == "disable":
             enabled = False
-        client_object = {"enabled": enabled }
+        client_object = {"enabled": enabled}
 
         return self.httpRequest("PUT", url, header, client_object)
 
