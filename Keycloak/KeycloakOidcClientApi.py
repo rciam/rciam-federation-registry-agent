@@ -146,6 +146,45 @@ class KeycloakOidcClientApi:
         return self.httpRequest("GET", url, header)
 
     """
+    Sync realm client scopes
+    
+    Returns:
+        response (JSON Object): A registered client in JSON format
+    """
+
+    def sync_realm_client_scopes(self):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/client-scopes"
+        header = {"Authorization": "Bearer " + self.token}
+        response = self.httpRequest("GET", url, header)
+
+        scope_list = {}
+        for scope in response["response"]:
+            scope_list[scope["name"]] = scope["id"]
+
+        return scope_list
+
+    """
+    Add client scope to the optional client scopes list of the client
+    
+    Returns:
+        response (JSON Object): A registered client in JSON format
+    """
+
+    def add_client_scopes_by_id(self, keycloak_id, client_scope_id):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + keycloak_id + "/optional-client-scopes/" + client_scope_id
+        header = {"Authorization": "Bearer " + self.token}
+        self.httpRequest("PUT", url, header)
+
+    """
+    Remove client scope to the optional client scopes list of the client
+    """
+
+    def remove_client_scopes_by_id(self, keycloak_id, client_scope_id):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + keycloak_id + "/optional-client-scopes/" + client_scope_id
+        header = {"Authorization": "Bearer " + self.token}
+        self.httpRequest("DELETE", url, header)
+
+    """
     Wrapper function for Python requests
 
     Parameters:

@@ -153,6 +153,21 @@ def publish_ams(pub_messages, ams_agent):
         ams_agent.publish(pub_messages)
 
 
+# Update the optional client scopes of the client
+def update_client_scopes(agent, client_uuid, new_client_config, current_client_config):
+    realm_client_scopes = agent.sync_realm_client_scopes()
+    current_optional_client_scopes = current_client_config["optionalClientScopes"]
+    new_optional_client_scopes = new_client_config["optionalClientScopes"]
+    remove_client_scopes = list(set(current_optional_client_scopes) - set(new_optional_client_scopes))
+    add_client_scopes = list(set(new_optional_client_scopes) - set(current_optional_client_scopes))
+
+    for remove_scope in remove_client_scopes:
+        agent.remove_client_scopes_by_id(client_uuid, realm_client_scopes[remove_scope])
+
+    for add_scope in add_client_scopes:
+        agent.add_client_scopes_by_id(client_uuid, realm_client_scopes[add_scope])
+
+
 # Calls Keycloak depending on the deployment type provided.
 # Operations handled:
 # - create
@@ -183,10 +198,11 @@ def call_keycloak(registry_message, keycloak_agent):
         log.info("Delete client with id: " + str(client_id))
         response = keycloak_agent.deleteClientById(client_id)
     elif deployment_type == "edit":
-        external_id = registry_message["external_id"]
         client_id = keycloak_msg["clientId"]
         log.info("Update client with id: " + str(client_id))
         response = keycloak_agent.updateClientById(client_id, keycloak_msg)
+        external_id = response["response"]["id"]
+        update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
         client_authz_permissions_response = keycloak_agent.getClientAuthzPermissions(external_id)
         if (
             client_authz_permissions_response["response"]["enabled"] == False
