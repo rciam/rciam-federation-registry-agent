@@ -115,7 +115,10 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 #    - realm, the name of the realm
 #    - access_token
 #    - agent_id
-def update_data(messages, auth_server, realm, access_token, agent_id):
+def update_data(messages, access_token, keycloak_config):
+    auth_server = keycloak_config["auth_server"]
+    realm = keycloak_config["realm"]
+    agent_id = keycloak_config["ams"]["agent_id"]
     # messages to be published
     pub_messages = []
     # Create Keycloak agent
@@ -127,7 +130,7 @@ def update_data(messages, auth_server, realm, access_token, agent_id):
         external_id = ""
         client_id = ""
         try:
-            response, external_id, client_id = call_keycloak(msg, keycloak_agent)
+            response, external_id, client_id = call_keycloak(msg, keycloak_agent, keycloak_config)
             log.info("Message received from Keycloak: " + str(response))
             ams_message = create_ams_response(response, service_id, agent_id, external_id, client_id)
         except:
@@ -168,12 +171,18 @@ def update_client_scopes(agent, client_uuid, new_client_config, current_client_c
         agent.add_client_scopes_by_id(client_uuid, realm_client_scopes[add_scope])
 
 
+# Update the optional client scopes of the client
+def update_service_account(agent, client_uuid, current_client_config, keycloak_config):
+    service_account_profile = agent.get_service_account_user(client_uuid)
+    agent.update_user(service_account_profile["response"], current_client_config, keycloak_config)
+
+
 # Calls Keycloak depending on the deployment type provided.
 # Operations handled:
 # - create
 # - delete
 # - edit
-def call_keycloak(registry_message, keycloak_agent):
+def call_keycloak(registry_message, keycloak_agent, keycloak_config):
     deployment_type = registry_message.pop("deployment_type")
     realm_default_client_scopes = keycloak_agent.getRealmDefaultClientScopes()
     default_client_scopes = []
@@ -193,6 +202,10 @@ def call_keycloak(registry_message, keycloak_agent):
             external_id = response_external_id["response"]["id"]
         if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
             keycloak_agent.updateClientAuthzPermissions(external_id, "enable")
+        if response["response"]["serviceAccountsEnabled"]:
+            update_service_account(
+                keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
+            )
     elif deployment_type == "delete":
         client_id = keycloak_msg["clientId"]
         log.info("Delete client with id: " + str(client_id))
@@ -203,6 +216,10 @@ def call_keycloak(registry_message, keycloak_agent):
         response = keycloak_agent.updateClientById(client_id, keycloak_msg)
         external_id = response["response"]["id"]
         update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
+        if response["response"]["serviceAccountsEnabled"]:
+            update_service_account(
+                keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
+            )
         client_authz_permissions_response = keycloak_agent.getClientAuthzPermissions(external_id)
         if (
             client_authz_permissions_response["response"]["enabled"] == False
@@ -256,13 +273,7 @@ if __name__ == "__main__":
                     config["keycloak"]["client_secret"],
                 )
             ams.ack(ids)
-            responses = update_data(
-                messages,
-                config["keycloak"]["auth_server"],
-                config["keycloak"]["realm"],
-                access_token,
-                config["keycloak"]["ams"]["agent_id"],
-            )
+            responses = update_data(messages, access_token, config["keycloak"])
             publish_ams(responses, ams)
         time.sleep(config["keycloak"]["ams"]["poll_interval"])
     log.info("Exit script")

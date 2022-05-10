@@ -171,7 +171,15 @@ class KeycloakOidcClientApi:
     """
 
     def add_client_scopes_by_id(self, keycloak_id, client_scope_id):
-        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + keycloak_id + "/optional-client-scopes/" + client_scope_id
+        url = (
+            self.auth_url
+            + "/admin/realms/"
+            + self.realm
+            + "/clients/"
+            + keycloak_id
+            + "/optional-client-scopes/"
+            + client_scope_id
+        )
         header = {"Authorization": "Bearer " + self.token}
         self.httpRequest("PUT", url, header)
 
@@ -180,9 +188,61 @@ class KeycloakOidcClientApi:
     """
 
     def remove_client_scopes_by_id(self, keycloak_id, client_scope_id):
-        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + keycloak_id + "/optional-client-scopes/" + client_scope_id
+        url = (
+            self.auth_url
+            + "/admin/realms/"
+            + self.realm
+            + "/clients/"
+            + keycloak_id
+            + "/optional-client-scopes/"
+            + client_scope_id
+        )
         header = {"Authorization": "Bearer " + self.token}
         self.httpRequest("DELETE", url, header)
+
+    """
+    Get the user of the service account
+    
+    Returns:
+        response (JSON Object): A user representation in JSON format
+    """
+
+    def get_service_account_user(self, keycloak_id):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + keycloak_id + "/service-account-user"
+        header = {"Authorization": "Bearer " + self.token}
+        return self.httpRequest("GET", url, header)
+
+    """
+    Update user profile information
+    """
+
+    def update_user(self, service_account_profile, keycloak_response, keycloak_config):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/users/" + service_account_profile["id"]
+        header = {"Authorization": "Bearer " + self.token}
+
+        update_flag = False
+        email_list = keycloak_response["attributes"]["contacts"].split(",")
+        first_name = keycloak_response["name"]
+        candidate_attr = keycloak_config["attribute_name"]
+        candidate_id = [service_account_profile[keycloak_config["candidate"]] + "@" + keycloak_config["scope"]]
+
+        if "email" not in service_account_profile or service_account_profile["email"] != email_list[0]:
+            service_account_profile["email"] = email_list[0]
+            update_flag = True
+        if "firstName" not in service_account_profile or service_account_profile["firstName"] != first_name:
+            service_account_profile["firstName"] = first_name
+            update_flag = True
+        if "attributes" not in service_account_profile:
+            service_account_profile["attributes"] = {}
+        if (
+            candidate_attr not in service_account_profile["attributes"]
+            or service_account_profile["attributes"][candidate_attr] != candidate_id
+        ):
+            service_account_profile["attributes"][candidate_attr] = candidate_id
+            update_flag = True
+
+        if update_flag:
+            self.httpRequest("PUT", url, header, service_account_profile)
 
     """
     Wrapper function for Python requests
