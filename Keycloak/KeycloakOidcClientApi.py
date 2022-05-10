@@ -175,7 +175,7 @@ class KeycloakOidcClientApi:
             print("Failed to make request to %s with error: %s" % (url, err))
             return {"status": response.status_code, "error": repr(err)}
 
-        if method == "DELETE":
+        if method == "DELETE" or response.status_code == 204:
             return {"status": response.status_code, "response": "OK"}
         else:
             return {"status": response.status_code, "response": response.json()}
