@@ -145,9 +145,9 @@ Use Keycloak as an API manager to communicate with Keycloak
 - Use the following functions to create, delete and update a service on clientCredentialsGrant
 
 ```python
-  response = keycloak_agent.createClient(keycloak_msg)
-  response = keycloak_agent.updateClientById(external_id, keycloak_msg)
-  response = keycloak_agent.deleteClientById(external_id)
+  response = keycloak_agent.create_client(keycloak_msg)
+  response = keycloak_agent.update_client(external_id, keycloak_msg)
+  response = keycloak_agent.delete_client(external_id)
 ```
 
 ### MITREid Connect

@@ -107,8 +107,8 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
 
         mock = Mock()
-        mock.createClient = MagicMock(return_value=out_service)
-        mock.getRealmDefaultClientScopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.create_client = MagicMock(return_value=out_service)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
         func_result = deployer_keycloak.call_keycloak(new_service, mock)
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
@@ -142,8 +142,8 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
 
         mock = Mock()
-        mock.deleteClientById = MagicMock(return_value=out_service)
-        mock.getRealmDefaultClientScopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.delete_client = MagicMock(return_value=out_service)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
         func_result = deployer_keycloak.call_keycloak(new_service, mock)
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", ""))
@@ -203,9 +203,9 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
 
         mock = Mock()
-        mock.updateClientById = MagicMock(return_value=out_service)
-        mock.getRealmDefaultClientScopes = MagicMock(return_value=realm_default_client_scopes)
-        mock.getClientAuthzPermissions = MagicMock(return_value=client_authz_permissions)
+        mock.update_client = MagicMock(return_value=out_service)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.get_client_authz_permissions = MagicMock(return_value=client_authz_permissions)
 
         func_result = deployer_keycloak.call_keycloak(new_service, mock)
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))

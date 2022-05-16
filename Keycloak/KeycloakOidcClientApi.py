@@ -33,11 +33,11 @@ class KeycloakOidcClientApi:
         response (JSON Object): A registered client in JSON format
     """
 
-    def getClientById(self, client_id):
+    def get_client_by_id(self, client_id):
         url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
         header = {"Authorization": "Bearer " + self.token}
 
-        return self.httpRequest("GET", url, header)
+        return self.http_request("GET", url, header)
 
     """
     Register new client
@@ -49,14 +49,14 @@ class KeycloakOidcClientApi:
         response (JSON Object): The registered client in JSON format
     """
 
-    def createClient(self, client_object):
+    def create_client(self, client_object):
         url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default"
         header = {
             "Authorization": "Bearer " + self.token,
             "Content-Type": "application/json",
         }
 
-        return self.httpRequest("POST", url, header, client_object)
+        return self.http_request("POST", url, header, client_object)
 
     """
     Update an existing client by ID
@@ -69,14 +69,14 @@ class KeycloakOidcClientApi:
         response (JSON Object): The registered client in JSON format
     """
 
-    def updateClientById(self, client_id, client_object):
+    def update_client(self, client_id, client_object):
         url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
         header = {
             "Authorization": "Bearer " + self.token,
             "Content-Type": "application/json",
         }
 
-        return self.httpRequest("PUT", url, header, client_object)
+        return self.http_request("PUT", url, header, client_object)
 
     """
     Delete a registered client by ID
@@ -88,11 +88,11 @@ class KeycloakOidcClientApi:
         response (JSON Object): The registered client in JSON format
     """
 
-    def deleteClientById(self, client_id):
+    def delete_client(self, client_id):
         url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
         header = {"Authorization": "Bearer " + self.token}
 
-        return self.httpRequest("DELETE", url, header)
+        return self.http_request("DELETE", url, header)
 
     """
     Get OIDC client's "Permissions"
@@ -104,11 +104,11 @@ class KeycloakOidcClientApi:
         response (JSON Object): The response from the Client AuthZ Permissions API
     """
 
-    def getClientAuthzPermissions(self, keycloak_id):
+    def get_client_authz_permissions(self, keycloak_id):
         url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) + "/management/permissions"
         header = {"Authorization": "Bearer " + self.token}
 
-        return self.httpRequest("GET", url, header)
+        return self.http_request("GET", url, header)
 
     """
     Enable OIDC client's "Permissions"
@@ -121,7 +121,7 @@ class KeycloakOidcClientApi:
         response (JSON Object): The registered client in JSON format
     """
 
-    def updateClientAuthzPermissions(self, keycloak_id, action):
+    def update_client_authz_permissions(self, keycloak_id, action):
         url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) + "/management/permissions"
         header = {"Authorization": "Bearer " + self.token}
         if action == "enable":
@@ -130,7 +130,7 @@ class KeycloakOidcClientApi:
             enabled = False
         client_object = {"enabled": enabled}
 
-        return self.httpRequest("PUT", url, header, client_object)
+        return self.http_request("PUT", url, header, client_object)
 
     """
     Get realm default client scopes
@@ -139,11 +139,11 @@ class KeycloakOidcClientApi:
         response (JSON Object): A registered client in JSON format
     """
 
-    def getRealmDefaultClientScopes(self):
+    def get_realm_default_client_scopes(self):
         url = self.auth_url + "/admin/realms/" + self.realm + "/default-default-client-scopes"
         header = {"Authorization": "Bearer " + self.token}
 
-        return self.httpRequest("GET", url, header)
+        return self.http_request("GET", url, header)
 
     """
     Sync realm client scopes
@@ -155,7 +155,7 @@ class KeycloakOidcClientApi:
     def sync_realm_client_scopes(self):
         url = self.auth_url + "/admin/realms/" + self.realm + "/client-scopes"
         header = {"Authorization": "Bearer " + self.token}
-        response = self.httpRequest("GET", url, header)
+        response = self.http_request("GET", url, header)
 
         scope_list = {}
         for scope in response["response"]:
@@ -170,7 +170,7 @@ class KeycloakOidcClientApi:
         response (JSON Object): A registered client in JSON format
     """
 
-    def add_client_scopes_by_id(self, keycloak_id, client_scope_id):
+    def add_client_scope_by_id(self, keycloak_id, client_scope_id):
         url = (
             self.auth_url
             + "/admin/realms/"
@@ -181,13 +181,13 @@ class KeycloakOidcClientApi:
             + client_scope_id
         )
         header = {"Authorization": "Bearer " + self.token}
-        self.httpRequest("PUT", url, header)
+        self.http_request("PUT", url, header)
 
     """
     Remove client scope to the optional client scopes list of the client
     """
 
-    def remove_client_scopes_by_id(self, keycloak_id, client_scope_id):
+    def remove_client_scope_by_id(self, keycloak_id, client_scope_id):
         url = (
             self.auth_url
             + "/admin/realms/"
@@ -198,7 +198,7 @@ class KeycloakOidcClientApi:
             + client_scope_id
         )
         header = {"Authorization": "Bearer " + self.token}
-        self.httpRequest("DELETE", url, header)
+        self.http_request("DELETE", url, header)
 
     """
     Get the user of the service account
@@ -210,7 +210,7 @@ class KeycloakOidcClientApi:
     def get_service_account_user(self, keycloak_id):
         url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + keycloak_id + "/service-account-user"
         header = {"Authorization": "Bearer " + self.token}
-        return self.httpRequest("GET", url, header)
+        return self.http_request("GET", url, header)
 
     """
     Update user profile information
@@ -242,7 +242,7 @@ class KeycloakOidcClientApi:
             update_flag = True
 
         if update_flag:
-            self.httpRequest("PUT", url, header, service_account_profile)
+            self.http_request("PUT", url, header, service_account_profile)
 
     """
     Wrapper function for Python requests
@@ -257,7 +257,7 @@ class KeycloakOidcClientApi:
         response (JSON Object): The status of the HTTP Response
     """
 
-    def httpRequest(self, method, url, header, data=None):
+    def http_request(self, method, url, header, data=None):
         try:
             response = requests.request(method, url, headers=header, json=data)
             response.raise_for_status()
