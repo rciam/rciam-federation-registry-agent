@@ -208,6 +208,7 @@ def call_keycloak(registry_message, keycloak_agent, keycloak_config):
             )
     elif deployment_type == "delete":
         client_id = keycloak_msg["clientId"]
+        external_id = registry_message["external_id"]
         log.info("Delete client with id: " + str(client_id))
         response = keycloak_agent.delete_client(client_id)
     elif deployment_type == "edit":
