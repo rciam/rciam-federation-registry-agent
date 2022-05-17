@@ -76,7 +76,7 @@ def update_data(messages, issuer_url, access_token, agent_id):
     for msg in messages:
         log.debug('Message from ams: ' + str(msg))
         service_id = msg.pop('id')    # Remove rciam service id to make request to mitreId
-        external_id = -1
+        external_id = ""
         client_id = ''
         try:
             response, external_id, client_id = call_mitreid(msg, mitreid_agent)
@@ -109,20 +109,20 @@ def call_mitreid(registry_message,mitreid_agent):
     mitreid_msg = format_mitreid_msg(registry_message, deployment_type)
     log.debug('Formated message for mitreId: ' + str(mitreid_msg))
     response = {}
-    external_id = -1
+    external_id = ""
     client_id = ''
     if deployment_type == 'create':
         log.info('Create new client')
         response = mitreid_agent.createClient(mitreid_msg)
         if (response['status']==200):
-            external_id = response['response']['id']
+            external_id = str(response['response']['id'])
             client_id = response['response']['clientId']
     elif deployment_type == 'delete':
-        external_id = registry_message['external_id']
+        external_id = str(registry_message['external_id'])
         log.info('Delete client with id: ' + str(external_id))
         response = mitreid_agent.deleteClientById(registry_message['external_id'])
     elif deployment_type == 'edit':
-        external_id = registry_message['external_id']
+        external_id = str(registry_message['external_id'])
         log.info('Update client with id: ' + str(external_id))
         response = mitreid_agent.updateClientById(registry_message['external_id'], mitreid_msg)
         if (response['status']==200):
