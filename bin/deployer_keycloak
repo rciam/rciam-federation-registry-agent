@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import json, time
+import json
+import time
 import argparse
 import logging
 from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
@@ -12,7 +13,7 @@ from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":"false","oidc.ciba.grant.enabled":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":"true","implicitFlowEnabled":"false","publicClient":"false","serviceAccountsEnabled":"false","standardFlowEnabled":"false"}'
+jsonTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":true,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false}'
 
 
 def map_token_endpoint_value(key):
@@ -70,52 +71,39 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
             if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
                 new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
             if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
-                new_msg["attributes"][
-                    "oauth2.device.authorization.grant.enabled"
-                ] = True
+                new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
             if grant_type == "implicit":
                 new_msg["implicitFlowEnabled"] = True
     if "token_endpoint_auth_method" in msg:
         if msg["token_endpoint_auth_method"] == "none":
             new_msg["publicClient"] = True
-        new_msg["clientAuthenticatorType"] = map_token_endpoint_value(
-            msg.pop("token_endpoint_auth_method")
-        )
+        new_msg["clientAuthenticatorType"] = map_token_endpoint_value(msg.pop("token_endpoint_auth_method"))
     if "client_secret" in msg:
         new_msg["secret"] = msg.pop("client_secret")
     if "token_endpoint_auth_signing_alg" in msg:
-        new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop(
-            "token_endpoint_auth_signing_alg"
-        )
+        new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop("token_endpoint_auth_signing_alg")
     if "jwks" in msg:
-        new_msg["attributes"]["use.jwks.string"] = True
-        new_msg["attributes"]["jwks.string"] = msg.pop("jwks")
+        new_msg["attributes"]["use.jwks.string"] = "true"
+        new_msg["attributes"]["jwks.string"] = json.dumps(msg.pop("jwks"))
     if "jwks_uri" in msg:
         new_msg["attributes"]["use.jwks.url"] = True
         new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
     if "refresh_token_validity_seconds" in msg:
-        new_msg["attributes"]["client.offline.session.max.lifespan"] = msg.pop(
-            "refresh_token_validity_seconds"
-        )
-        # if "reuse_refresh_token" in msg:
-        #     new_msg["attributes"]["revoke.refresh.token"] = msg.pop("reuse_refresh_token")
+        new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
+        new_msg["attributes"]["client.offline.session.max.lifespan"] = str(msg.pop("refresh_token_validity_seconds"))
+        if "reuse_refresh_token" in msg:
+            new_msg["attributes"]["revoke.refresh.token"] = str(msg.pop("reuse_refresh_token"))
     if "code_challenge_method" in msg:
-        new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop(
-            "code_challenge_method"
-        )
+        new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
     if "access_token_validity_seconds" in msg:
         if msg["access_token_validity_seconds"] < 60:
-            new_msg["attributes"]["access.token.lifespan"] = 60
+            new_msg["attributes"]["access.token.lifespan"] = "60"
         else:
-            new_msg["attributes"]["access.token.lifespan"] = msg.pop(
-                "access_token_validity_seconds"
-            )
+            new_msg["attributes"]["access.token.lifespan"] = str(msg.pop("access_token_validity_seconds"))
     if "id_token_timeout_seconds" in msg:
-        new_msg["attributes"]["id.token.lifespan"] = msg.pop("id_token_timeout_seconds")
+        new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
     if "device_code_validity_seconds" in msg:
-        new_msg["attributes"]["oauth2.device.code.lifespan"] = msg.pop(
-            "device_code_validity_seconds"
-        )
+        new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
     return new_msg
 
 
@@ -127,24 +115,24 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 #    - realm, the name of the realm
 #    - access_token
 #    - agent_id
-def update_data(messages, auth_server, realm, access_token, agent_id):
-    pub_messages = []  # messages to be published
-    keycloak_agent = KeycloakOidcClientApi(
-        auth_server, realm, access_token
-    )  # Create Keycloak agent
+def update_data(messages, access_token, keycloak_config):
+    auth_server = keycloak_config["auth_server"]
+    realm = keycloak_config["realm"]
+    agent_id = keycloak_config["ams"]["agent_id"]
+    # messages to be published
+    pub_messages = []
+    # Create Keycloak agent
+    keycloak_agent = KeycloakOidcClientApi(auth_server, realm, access_token)
     for msg in messages:
         log.debug("Message from ams: " + str(msg))
-        service_id = msg.pop(
-            "id"
-        )  # Remove rciam service id to make request to Keycloak
-        external_id = -1
+        # Remove rciam service id to make request to Keycloak
+        service_id = msg.pop("id")
+        external_id = ""
         client_id = ""
         try:
-            response, external_id, client_id = call_keycloak(msg, keycloak_agent)
+            response, external_id, client_id = call_keycloak(msg, keycloak_agent, keycloak_config)
             log.info("Message received from Keycloak: " + str(response))
-            ams_message = create_ams_response(
-                response, service_id, agent_id, external_id, client_id
-            )
+            ams_message = create_ams_response(response, service_id, agent_id, external_id, client_id)
         except:
             log.critical("Exception catch, return error to ams")
             ams_message = create_ams_response(
@@ -168,62 +156,89 @@ def publish_ams(pub_messages, ams_agent):
         ams_agent.publish(pub_messages)
 
 
+# Update the optional client scopes of the client
+def update_client_scopes(agent, client_uuid, new_client_config, current_client_config):
+    realm_client_scopes = agent.sync_realm_client_scopes()
+    current_optional_client_scopes = current_client_config["optionalClientScopes"]
+    new_optional_client_scopes = new_client_config["optionalClientScopes"]
+    remove_client_scopes = list(set(current_optional_client_scopes) - set(new_optional_client_scopes))
+    add_client_scopes = list(set(new_optional_client_scopes) - set(current_optional_client_scopes))
+
+    for remove_scope in remove_client_scopes:
+        agent.remove_client_scope_by_id(client_uuid, realm_client_scopes[remove_scope])
+
+    for add_scope in add_client_scopes:
+        agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
+
+
+# Update the optional client scopes of the client
+def update_service_account(agent, client_uuid, current_client_config, keycloak_config):
+    service_account_profile = agent.get_service_account_user(client_uuid)
+    agent.update_user(service_account_profile["response"], current_client_config, keycloak_config)
+
+
 # Calls Keycloak depending on the deployment type provided.
 # Operations handled:
 # - create
 # - delete
 # - edit
-def call_keycloak(registry_message, keycloak_agent):
+def call_keycloak(registry_message, keycloak_agent, keycloak_config):
     deployment_type = registry_message.pop("deployment_type")
-    realm_default_client_scopes = keycloak_agent.getRealmDefaultClientScopes()
+    realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes()
     default_client_scopes = []
     for scope in realm_default_client_scopes["response"]:
         default_client_scopes.append(scope["name"])
     keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
     log.debug("Formated message for Keycloak: " + str(keycloak_msg))
     response = {}
-    external_id = -1
+    external_id = ""
     client_id = ""
     if deployment_type == "create":
         log.info("Create new client")
-        response = keycloak_agent.createClient(keycloak_msg)
-        if response["status"] == 200:
-            external_id = response["response"]["id"]
+        response = keycloak_agent.create_client(keycloak_msg)
+        if response["status"] == 201:
             client_id = response["response"]["clientId"]
-        if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"]:
-            keycloak_agent.updateClientAuthzPermissions(external_id, "enable")
+            response_external_id = keycloak_agent.get_client_by_id(client_id)
+            external_id = response_external_id["response"]["id"]
+        if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
+            keycloak_agent.update_client_authz_permissions(external_id, "enable")
+        if response["response"]["serviceAccountsEnabled"]:
+            update_service_account(
+                keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
+            )
     elif deployment_type == "delete":
+        client_id = keycloak_msg["clientId"]
         external_id = registry_message["external_id"]
-        log.info("Delete client with id: " + str(external_id))
-        response = keycloak_agent.deleteClientById(registry_message["external_id"])
+        log.info("Delete client with id: " + str(client_id))
+        response = keycloak_agent.delete_client(client_id)
     elif deployment_type == "edit":
-        external_id = registry_message["external_id"]
-        log.info("Update client with id: " + str(external_id))
-        response = keycloak_agent.updateClientById(
-            registry_message["external_id"], keycloak_msg
-        )
-        if response["status"] == 200:
-            client_id = response["response"]["clientId"]
-        client_authz_permissions_response = keycloak_agent.getClientAuthzPermissions(external_id)
+        client_id = keycloak_msg["clientId"]
+        log.info("Update client with id: " + str(client_id))
+        response = keycloak_agent.update_client(client_id, keycloak_msg)
+        external_id = response["response"]["id"]
+        update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
+        if response["response"]["serviceAccountsEnabled"]:
+            update_service_account(
+                keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
+            )
+        client_authz_permissions_response = keycloak_agent.get_client_authz_permissions(external_id)
         if (
             client_authz_permissions_response["response"]["enabled"] == False
-            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == "true"
+            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True
         ):
-            keycloak_agent.updateClientAuthzPermissions(external_id, "enable")
+            keycloak_agent.update_client_authz_permissions(external_id, "enable")
         elif (
             client_authz_permissions_response["response"]["enabled"] == True
-            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == "false"
+            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == False
         ):
-            keycloak_agent.updateClientAuthzPermissions(external_id, "disable")
+            keycloak_agent.update_client_authz_permissions(external_id, "disable")
     return response, external_id, client_id
 
 
 if __name__ == "__main__":
     # Get config path from arguments
     parser = argparse.ArgumentParser()
-    parser.add_argument(
-        "-c", required=True, type=str, help="Configuration file location path"
-    )
+    parser.add_argument("-c", required=True, type=str, help="Configuration file location path")
     args = parser.parse_args()
     path = args.c
     with open(path) as json_data_file:
@@ -259,13 +274,7 @@ if __name__ == "__main__":
                     config["keycloak"]["client_secret"],
                 )
             ams.ack(ids)
-            responses = update_data(
-                messages,
-                config["keycloak"]["auth_server"],
-                config["keycloak"]["realm"],
-                access_token,
-                config["keycloak"]["ams"]["agent_id"],
-            )
+            responses = update_data(messages, access_token, config["keycloak"])
             publish_ams(responses, ams)
         time.sleep(config["keycloak"]["ams"]["poll_interval"])
     log.info("Exit script")

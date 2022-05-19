@@ -14,7 +14,12 @@
     "realm": "example",
     "refresh_token": "refresh token",
     "client_id": "client ID",
-    "client_secret": "client secret"
+    "client_secret": "client secret",
+    "service_account": {
+      "attribute_name": "voPersonID",
+      "candidate": "id",
+      "scope": "example.org"
+    }
   },
   "log_conf": "conf/logger.conf",
   "mitreid": {

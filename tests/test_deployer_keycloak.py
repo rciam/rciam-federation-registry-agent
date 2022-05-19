@@ -12,9 +12,7 @@ def get_resource_path(relative_path):
 
 
 # load standalone script as module
-loader = importlib.machinery.SourceFileLoader(
-    "deployer_keycloak", get_resource_path("../bin/deployer_keycloak")
-)
+loader = importlib.machinery.SourceFileLoader("deployer_keycloak", get_resource_path("../bin/deployer_keycloak"))
 deployer_keycloak = types.ModuleType(loader.name)
 loader.exec_module(deployer_keycloak)
 
@@ -35,25 +33,25 @@ class TestDeployerKeycloak(unittest.TestCase):
         out_service = {
             "attributes": {
                 "client_credentials.use_refresh_token": "false",
+                "contacts": "email1",
                 "oauth2.device.authorization.grant.enabled": "false",
-                "oauth2.token.exchange.grant.enabled": "false",
+                "oauth2.token.exchange.grant.enabled": False,
                 "oidc.ciba.grant.enabled": "false",
+                "refresh.token.max.reuse": "0",
+                "revoke.refresh.token": "false",
                 "use.jwks.string": "false",
                 "use.jwks.url": "false",
                 "use.refresh.tokens": "false",
-                "contacts": "email1"
             },
-            "consentRequired": "true",
-            "implicitFlowEnabled": "false",
-            "publicClient": "false",
-            "serviceAccountsEnabled": "false",
-            "standardFlowEnabled": "false",
-            "defaultClientScopes": [
-                "example"
-            ],
             "clientId": "testId1",
-            "name": "testName1",
+            "consentRequired": True,
+            "defaultClientScopes": ["example"],
             "description": "testDescription1",
+            "implicitFlowEnabled": False,
+            "name": "testName1",
+            "publicClient": False,
+            "serviceAccountsEnabled": False,
+            "standardFlowEnabled": False,
         }
 
         func_result = deployer_keycloak.format_keycloak_msg(new_service, ["example"])
@@ -75,13 +73,15 @@ class TestDeployerKeycloak(unittest.TestCase):
             "response": {
                 "attributes": {
                     "client_credentials.use_refresh_token": "false",
+                    "contacts": "email1",
                     "oauth2.device.authorization.grant.enabled": "false",
-                    "oauth2.token.exchange.grant.enabled": "false",
+                    "oauth2.token.exchange.grant.enabled": False,
                     "oidc.ciba.grant.enabled": "false",
+                    "refresh.token.max.reuse": "0",
+                    "revoke.refresh.token": "false",
                     "use.jwks.string": "false",
                     "use.jwks.url": "false",
                     "use.refresh.tokens": "false",
-                    "contacts": "email1"
                 },
                 "consentRequired": "true",
                 "implicitFlowEnabled": "false",
@@ -89,28 +89,35 @@ class TestDeployerKeycloak(unittest.TestCase):
                 "serviceAccountsEnabled": "false",
                 "standardFlowEnabled": "false",
                 "clientId": "testId1",
-                "name": "testName1",
+                "consentRequired": True,
+                "defaultClientScopes": ["example"],
                 "description": "testDescription1",
                 "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
+                "implicitFlowEnabled": False,
+                "name": "testName1",
+                "publicClient": False,
+                "serviceAccountsEnabled": False,
+                "standardFlowEnabled": False,
             },
-            "status": 200,
+            "status": 201,
         }
         realm_default_client_scopes = {
             "response": [
-                {
-                    "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
-                    "name": "example",
-                    "protocol": "openid-connect"
-                }
+                {"id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "name": "example", "protocol": "openid-connect"}
             ],
-            "status": 200,
+            "status": 201,
         }
 
-        mock = Mock()
-        mock.createClient = MagicMock(return_value=out_service)
-        mock.getRealmDefaultClientScopes = MagicMock(return_value=realm_default_client_scopes)
+        mock = MagicMock()
+        mock.create_client = MagicMock(return_value=out_service)
+        mock.get_client_by_id = MagicMock(return_value=out_service)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
-        func_result = deployer_keycloak.call_keycloak(new_service, mock)
+        service_account_config = {
+            "service_account": {"attribute_name": "voPersonID", "candidate": "id", "scope": "example.org"}
+        }
+
+        func_result = deployer_keycloak.call_keycloak(new_service, mock, service_account_config)
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
 
     # Test calling Keycloak to delete an entry
@@ -132,21 +139,16 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
         realm_default_client_scopes = {
             "response": [
-                {
-                    "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
-                    "name": "example",
-                    "protocol": "openid-connect"
-                }
+                {"id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "name": "example", "protocol": "openid-connect"}
             ],
             "status": 200,
         }
 
-        mock = Mock()
-        mock.deleteClientById = MagicMock(return_value=out_service)
-        mock.getRealmDefaultClientScopes = MagicMock(return_value=realm_default_client_scopes)
+        mock = MagicMock()
+        mock.delete_client = MagicMock(return_value=out_service)
 
-        func_result = deployer_keycloak.call_keycloak(new_service, mock)
-        self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", ""))
+        func_result = deployer_keycloak.call_keycloak(new_service, mock, "config")
+        self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
 
     # Test calling Keycloak to update an entry
     def test_call_keycloak_update(self):
@@ -160,18 +162,19 @@ class TestDeployerKeycloak(unittest.TestCase):
                 {"name": "name2", "email": "email2", "type": "security"},
             ],
             "deployment_type": "edit",
+            "scope": ["email", "eduperson_entitlement"],
         }
         out_service = {
             "response": {
                 "attributes": {
                     "client_credentials.use_refresh_token": "false",
+                    "contacts": "email1",
                     "oauth2.device.authorization.grant.enabled": "false",
-                    "oauth2.token.exchange.grant.enabled": "false",
+                    "oauth2.token.exchange.grant.enabled": False,
                     "oidc.ciba.grant.enabled": "false",
                     "use.jwks.string": "false",
                     "use.jwks.url": "false",
                     "use.refresh.tokens": "false",
-                    "contacts": "email1"
                 },
                 "consentRequired": "true",
                 "implicitFlowEnabled": "false",
@@ -179,35 +182,36 @@ class TestDeployerKeycloak(unittest.TestCase):
                 "serviceAccountsEnabled": "false",
                 "standardFlowEnabled": "false",
                 "clientId": "testId1",
-                "name": "testName1",
+                "consentRequired": True,
                 "description": "testDescription1",
                 "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
+                "implicitFlowEnabled": False,
+                "name": "testName1",
+                "defaultClientScopes": ["example"],
+                "publicClient": False,
+                "serviceAccountsEnabled": False,
+                "standardFlowEnabled": False,
+                "optionalClientScopes": ["email", "profile"],
             },
             "status": 200,
         }
         realm_default_client_scopes = {
             "response": [
-                {
-                    "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
-                    "name": "example",
-                    "protocol": "openid-connect"
-                }
+                {"id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "name": "example", "protocol": "openid-connect"}
             ],
             "status": 200,
         }
         client_authz_permissions = {
-            "response": {
-                "enabled": False
-            },
+            "response": {"enabled": False},
             "status": 200,
         }
 
-        mock = Mock()
-        mock.updateClientById = MagicMock(return_value=out_service)
-        mock.getRealmDefaultClientScopes = MagicMock(return_value=realm_default_client_scopes)
-        mock.getClientAuthzPermissions = MagicMock(return_value=client_authz_permissions)
+        mock = MagicMock()
+        mock.update_client = MagicMock(return_value=out_service)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.get_client_authz_permissions = MagicMock(return_value=client_authz_permissions)
 
-        func_result = deployer_keycloak.call_keycloak(new_service, mock)
+        func_result = deployer_keycloak.call_keycloak(new_service, mock, "config")
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
 
     # Test update data with error when calling Keycloak
@@ -223,7 +227,13 @@ class TestDeployerKeycloak(unittest.TestCase):
             }
         ]
 
-        func_result = deployer_keycloak.update_data(new_msg, "", "", "", 1)
+        keycloak_config = {
+            "ams": {"agent_id": 1},
+            "auth_server": "https://example.com/auth",
+            "realm": "example",
+        }
+
+        func_result = deployer_keycloak.update_data(new_msg, "", keycloak_config)
         self.assertEqual(
             func_result,
             [
@@ -253,10 +263,16 @@ class TestDeployerKeycloak(unittest.TestCase):
             }
         ]
         deployer_keycloak.call_keycloak = MagicMock(
-            return_value=({"status": 200}, 12, "testId1")
+            return_value=({"status": 200}, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1")
         )
 
-        func_result = deployer_keycloak.update_data(new_msg, "url", "realm", "token", 1)
+        keycloak_config = {
+            "ams": {"agent_id": 1},
+            "auth_server": "https://example.com/auth",
+            "realm": "example",
+        }
+
+        func_result = deployer_keycloak.update_data(new_msg, "token", keycloak_config)
         self.assertEqual(
             func_result,
             [
@@ -264,7 +280,7 @@ class TestDeployerKeycloak(unittest.TestCase):
                     "attributes": {},
                     "data": {
                         "id": 12,
-                        "external_id": 12,
+                        "external_id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
                         "agent_id": 1,
                         "status_code": 200,
                         "state": "deployed",
