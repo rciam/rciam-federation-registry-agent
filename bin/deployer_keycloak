@@ -53,6 +53,8 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         for contact in msg["contacts"]:
             if contact["type"] == "technical" or contact["type"] == "support":
                 emails.append(contact["email"])
+        # Remove duplicate entries
+        emails = list(set(emails))
         new_msg["attributes"]["contacts"] = ",".join(emails)
     if "client_id" in msg:
         new_msg["clientId"] = msg.pop("client_id")
