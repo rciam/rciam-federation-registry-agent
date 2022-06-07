@@ -164,6 +164,28 @@ class KeycloakOidcClientApi:
         return scope_list
 
     """
+    Create realm client scope
+    
+    Returns:
+        response (JSON Object): A registered client in JSON format
+    """
+
+    def create_realm_client_scopes(self, scope_name):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/client-scopes"
+        header = {"Authorization": "Bearer " + self.token}
+        client_scope_object = {
+            "name": scope_name,
+            "protocol": "openid-connect",
+            "attributes": {
+                "include.in.token.scope": "true",
+                "hide.from.openID.provider.metadata": "true",
+                "display.on.consent.screen": "true",
+            },
+        }
+
+        self.http_request("POST", url, header, client_scope_object)
+
+    """
     Add client scope to the optional client scopes list of the client
     
     Returns:
@@ -274,7 +296,7 @@ class KeycloakOidcClientApi:
             print("Failed to make request to %s with error: %s" % (url, err))
             return {"status": response.status_code, "error": repr(err)}
 
-        if method == "DELETE" or response.status_code == 204:
+        if method == "DELETE" or response.status_code == 204 or not response.text:
             return {"status": response.status_code, "response": "OK"}
         else:
             return {"status": response.status_code, "response": response.json()}

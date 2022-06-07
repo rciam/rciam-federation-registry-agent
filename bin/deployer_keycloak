@@ -163,6 +163,22 @@ def update_client_scopes(agent, client_uuid, new_client_config, current_client_c
     realm_client_scopes = agent.sync_realm_client_scopes()
     current_optional_client_scopes = current_client_config["optionalClientScopes"]
     new_optional_client_scopes = new_client_config["optionalClientScopes"]
+
+    # Custom scopes that are not created in Keycloak
+    create_client_scopes = list(set(new_optional_client_scopes) - set(realm_client_scopes.keys()))
+    parametric_scope_delimiter = "?value="
+    for scope in create_client_scopes:
+        if parametric_scope_delimiter in scope:
+            # Ignore parametric scopes
+            log.info("The scope '" + scope + "' will be ignored.")
+            new_optional_client_scopes.remove(scope)
+        else:
+            # Create custom scope
+            agent.create_realm_client_scopes(scope)
+
+    # Get updated client scopes
+    realm_client_scopes = agent.sync_realm_client_scopes()
+
     remove_client_scopes = list(set(current_optional_client_scopes) - set(new_optional_client_scopes))
     add_client_scopes = list(set(new_optional_client_scopes) - set(current_optional_client_scopes))
 
