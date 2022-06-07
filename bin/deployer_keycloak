@@ -56,7 +56,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         # Remove duplicate entries
         emails = list(set(emails))
         new_msg["attributes"]["contacts"] = ",".join(emails)
-    if "client_id" in msg:
+    if "client_id" in msg and msg["client_id"]:
         new_msg["clientId"] = msg.pop("client_id")
     if "redirect_uris" in msg:
         new_msg["redirectUris"] = msg.pop("redirect_uris")
