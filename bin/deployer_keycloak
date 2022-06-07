@@ -216,8 +216,11 @@ def call_keycloak(registry_message, keycloak_agent, keycloak_config):
         response = keycloak_agent.create_client(keycloak_msg)
         if response["status"] == 201:
             client_id = response["response"]["clientId"]
-            response_external_id = keycloak_agent.get_client_by_id(client_id)
-            external_id = response_external_id["response"]["id"]
+            if "id" in response["response"]:
+                external_id = response["response"]["id"]
+            else:
+                response_external_id = keycloak_agent.get_client_by_id(client_id)
+                external_id = response_external_id["response"]["id"]
         if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
             keycloak_agent.update_client_authz_permissions(external_id, "enable")
         if response["response"]["serviceAccountsEnabled"]:
