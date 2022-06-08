@@ -53,8 +53,10 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         for contact in msg["contacts"]:
             if contact["type"] == "technical" or contact["type"] == "support":
                 emails.append(contact["email"])
+        # Remove duplicate entries
+        emails = list(set(emails))
         new_msg["attributes"]["contacts"] = ",".join(emails)
-    if "client_id" in msg:
+    if "client_id" in msg and msg["client_id"]:
         new_msg["clientId"] = msg.pop("client_id")
     if "redirect_uris" in msg:
         new_msg["redirectUris"] = msg.pop("redirect_uris")
@@ -161,6 +163,22 @@ def update_client_scopes(agent, client_uuid, new_client_config, current_client_c
     realm_client_scopes = agent.sync_realm_client_scopes()
     current_optional_client_scopes = current_client_config["optionalClientScopes"]
     new_optional_client_scopes = new_client_config["optionalClientScopes"]
+
+    # Custom scopes that are not created in Keycloak
+    create_client_scopes = list(set(new_optional_client_scopes) - set(realm_client_scopes.keys()))
+    parametric_scope_delimiter = "?value="
+    for scope in create_client_scopes:
+        if parametric_scope_delimiter in scope:
+            # Ignore parametric scopes
+            log.info("The scope '" + scope + "' will be ignored.")
+            new_optional_client_scopes.remove(scope)
+        else:
+            # Create custom scope
+            agent.create_realm_client_scopes(scope)
+
+    # Get updated client scopes
+    realm_client_scopes = agent.sync_realm_client_scopes()
+
     remove_client_scopes = list(set(current_optional_client_scopes) - set(new_optional_client_scopes))
     add_client_scopes = list(set(new_optional_client_scopes) - set(current_optional_client_scopes))
 
@@ -198,8 +216,11 @@ def call_keycloak(registry_message, keycloak_agent, keycloak_config):
         response = keycloak_agent.create_client(keycloak_msg)
         if response["status"] == 201:
             client_id = response["response"]["clientId"]
-            response_external_id = keycloak_agent.get_client_by_id(client_id)
-            external_id = response_external_id["response"]["id"]
+            if "id" in response["response"]:
+                external_id = response["response"]["id"]
+            else:
+                response_external_id = keycloak_agent.get_client_by_id(client_id)
+                external_id = response_external_id["response"]["id"]
         if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
             keycloak_agent.update_client_authz_permissions(external_id, "enable")
         if response["response"]["serviceAccountsEnabled"]:
