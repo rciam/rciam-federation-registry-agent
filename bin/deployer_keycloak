@@ -94,7 +94,8 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
         new_msg["attributes"]["client.offline.session.max.lifespan"] = str(msg.pop("refresh_token_validity_seconds"))
         if "reuse_refresh_token" in msg:
-            new_msg["attributes"]["revoke.refresh.token"] = str(msg.pop("reuse_refresh_token"))
+            reuse_refresh_token = str(msg.pop("reuse_refresh_token"))
+            new_msg["attributes"]["revoke.refresh.token"] = reuse_refresh_token.lower()
     if "code_challenge_method" in msg:
         new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
     if "access_token_validity_seconds" in msg:
