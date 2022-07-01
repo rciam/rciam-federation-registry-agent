@@ -105,7 +105,17 @@ def publish_ams(ams_agent, response, messages, agent_id):
     log.info("Publish message to ams")
     pub_messages = []
     for message in messages:
-        msg = create_ams_response(response, message['id'], agent_id, -1, '')
+        try:
+            msg = create_ams_response(response, message['id'], agent_id, -1, '')
+        except:
+            log.critical("Exception catch, return error to ams")
+            msg = create_ams_response(
+                {"status": 0, "error": "An error occurred while creating AMS response"},
+                message['id'],
+                agent_id,
+                -1,
+                ''
+            )
         pub_messages.append({'attributes':{},'data': msg})
     log.debug("Messages published to ams: " + str(pub_messages))
     ams_agent.publish(pub_messages)
@@ -141,6 +151,7 @@ if __name__ == '__main__':
             generate_config(services_json, config['ssp']['metadata_conf_file'])
             ams.ack(ids)
             response = call_ssp_syncer(config['ssp']['cron_url'], config['ssp']['cron_secret'], config['ssp']['request_timeout'], config['ssp']['cron_tag'])
+            log.info("Message received from SSP: " + str(response))
             publish_ams(ams, response, messages, config['ssp']['ams']['agent_id'])
         time.sleep(config['ssp']['ams']['poll_interval'])
     log.info('Exit script')
