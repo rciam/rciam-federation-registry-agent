@@ -47,20 +47,22 @@ php file with the updated state
 '''
 def generate_config( services, path ):
     log.info('Generate php ssp config file at ' + path)
-    header = """<?php
-return array("""
+    header = """<?
+
+return ["""
     footer = """
-);"""
+];
+"""
     content = ""
     for service in services:
         content += """
-    array(
+    [
         'registry_service_id' => """ + str(service['registry_service_id']) + """,
-        'whitelist' => array (
+        'whitelist' => [
             '"""+ str(service['whitelist'][0])  +"""',
-        ),
+        ],
         'src' => '""" + str(service['src']) + """',
-    ),"""
+    ],"""
     f = open(path,"w")
     f.write(header+content+footer)
     f.close()
