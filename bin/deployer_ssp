@@ -86,16 +86,16 @@ def call_ssp_syncer(ssp_url, metadata_key, request_timeout, cron_tag):
         response = requests.get(ssp_url, params = payload, timeout=request_timeout)
         response.raise_for_status()
     except requests.exceptions.HTTPError as errh:
-        print("Http Error: %s with error: %s" % (ssp_url, repr(errh)))
+        log.error("Http Error: %s with error: %s" % (ssp_url, repr(errh)))
         return {'status': response.status_code,'error': repr(errh) }
     except requests.exceptions.ConnectionError as errc:
-        print("Error Connecting: %s with error: %s" % (ssp_url, repr(errc)))
+        log.error("Error Connecting: %s with error: %s" % (ssp_url, repr(errc)))
         return {'status': 0,'error': repr(errc) }
     except requests.exceptions.Timeout as errt:
-        print("Timeout Error: %s with error: %s" % (ssp_url, repr(errt)))
+        log.error("Timeout Error: %s with error: %s" % (ssp_url, repr(errt)))
         return {'status': 0,'error': repr(errt) }
     except requests.exceptions.RequestException as err:
-        print("Failed to make request to %s with error: %s" % (ssp_url, err))
+        log.error("Failed to make request to %s with error: %s" % (ssp_url, err))
         return {'status': 0,'error': repr(err) }
     else:
         return {'status': response.status_code,'response': repr(response)}
