@@ -134,12 +134,12 @@ if __name__ == '__main__':
     while True:
         log.info('Pull messages from ams')
         messages, ids = ams.pull(1)
-        ams.ack(ids)
         log.info('Received ' + str(len(messages)) +' messages from ams')
         log.debug('Messages:' + str(messages))
         if len(messages)>0:
             services_json = update_data(services_json, messages)
             generate_config(services_json, config['ssp']['metadata_conf_file'])
+            ams.ack(ids)
             response = call_ssp_syncer(config['ssp']['cron_url'], config['ssp']['cron_secret'], config['ssp']['request_timeout'], config['ssp']['cron_tag'])
             publish_ams(ams, response, messages, config['ssp']['ams']['agent_id'])
         time.sleep(config['ssp']['ams']['poll_interval'])
