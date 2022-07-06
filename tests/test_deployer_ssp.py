@@ -75,10 +75,10 @@ class TestDeployerSsp(unittest.TestCase):
 
     # Verify the generated php config
     def test_generate_config(self):
-        services = [{"registry_service_id": "testId1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
-            {"registry_service_id": "testId2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
+        services = [{"registry_service_id": "1", "whitelist": ["testEntityId1"], "src": "TestMetadataUrl1"}, \
+            {"registry_service_id": "2", "whitelist": ["testEntityId2"], "src": "TestMetadataUrl2"}]
         deployer_ssp.generate_config(services,'./test_file.php') 
-        self.assertTrue(filecmp.cmp('./test_file.php',get_resource_path('./files/ssp_config.php')), 'You error message')
+        self.assertTrue(filecmp.cmp('./test_file.php',get_resource_path('./files/ssp_config.php')), 'Files differ')
 
     # Call ssp syncer with 200 http response
     def test_call_ssp_syncer_positive(self):

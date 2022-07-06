@@ -1,17 +1,18 @@
 <?php
-return array(
-    array(
-        'registry_service_id' => testId1,
-        'whitelist' => array (
+
+return [
+    [
+        'registry_service_id' => 1,
+        'whitelist' => [
             'testEntityId1',
-        ),
+        ],
         'src' => 'TestMetadataUrl1',
-    ),
-    array(
-        'registry_service_id' => testId2,
-        'whitelist' => array (
+    ],
+    [
+        'registry_service_id' => 2,
+        'whitelist' => [
             'testEntityId2',
-        ),
+        ],
         'src' => 'TestMetadataUrl2',
-    ),
-);
+    ],
+];
