@@ -120,14 +120,14 @@ def publish_ams(ams_agent, response, messages, agent_id):
     pub_messages = []
     for message in messages:
         try:
-            msg = create_ams_response(response, message["id"], agent_id, -1, "")
+            msg = create_ams_response(response, message["id"], agent_id, "", "")
         except:
             log.critical("Exception catch, return error to ams")
             msg = create_ams_response(
                 {"status": 0, "error": "An error occurred while creating AMS response"},
                 message["id"],
                 agent_id,
-                -1,
+                "",
                 "",
             )
         pub_messages.append({"attributes": {}, "data": msg})
