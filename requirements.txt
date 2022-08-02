@@ -1,4 +1,4 @@
-argo-ams-library==0.5.5
+argo-ams-library>=0.5.9
 certifi==2021.10.8
 chardet==4.0.0
 idna==3.3
