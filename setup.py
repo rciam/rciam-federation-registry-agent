@@ -19,7 +19,7 @@ setup(
     name='rciam-federation-registry-agent',
     author='grnet',
     author_email='faai@grnet.gr',
-    version='2.3.0',
+    version='2.3.1',
     license='ASL 2.0',
     url='https://github.com/rciam/rciam-federation-registry-agent',
     packages=find_packages(),
