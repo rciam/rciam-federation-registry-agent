@@ -92,7 +92,6 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
     if "refresh_token_validity_seconds" in msg:
         new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
-        new_msg["attributes"]["client.offline.session.max.lifespan"] = str(msg.pop("refresh_token_validity_seconds"))
         if "reuse_refresh_token" in msg:
             rotate_refresh_token = str(not msg.pop("reuse_refresh_token"))
             new_msg["attributes"]["revoke.refresh.token"] = rotate_refresh_token.lower()
