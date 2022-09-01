@@ -159,6 +159,28 @@ def publish_ams(pub_messages, ams_agent):
         log.debug("Messages published to ams: " + str(pub_messages))
         ams_agent.publish(pub_messages)
 
+# Create the optional client scopes of the client
+def create_client_scopes(agent, client_uuid, client_config):
+    realm_client_scopes = agent.sync_realm_client_scopes()
+    new_optional_client_scopes = client_config["optionalClientScopes"]
+
+    # Custom scopes that are not created in Keycloak
+    create_client_scopes = list(set(new_optional_client_scopes) - set(realm_client_scopes.keys()))
+    parametric_scope_delimiter = "?value="
+    for scope in create_client_scopes:
+        if parametric_scope_delimiter in scope:
+            # Ignore parametric scopes
+            log.info("The scope '" + scope + "' will be ignored.")
+            new_optional_client_scopes.remove(scope)
+        else:
+            # Create custom scope
+            agent.create_realm_client_scopes(scope)
+
+    # Get updated client scopes
+    realm_client_scopes = agent.sync_realm_client_scopes()
+
+    for add_scope in create_client_scopes:
+        agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
 
 # Update the optional client scopes of the client
 def update_client_scopes(agent, client_uuid, new_client_config, current_client_config):
@@ -223,6 +245,7 @@ def call_keycloak(registry_message, keycloak_agent, keycloak_config):
             else:
                 response_external_id = keycloak_agent.get_client_by_id(client_id)
                 external_id = response_external_id["response"]["id"]
+        create_client_scopes(keycloak_agent, external_id, keycloak_msg)
         if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
             keycloak_agent.update_client_authz_permissions(external_id, "enable")
         if response["response"]["serviceAccountsEnabled"]:
