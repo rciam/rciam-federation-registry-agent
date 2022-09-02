@@ -67,6 +67,11 @@ class TestDeployerKeycloak(unittest.TestCase):
                 {"name": "name1", "email": "email1", "type": "technical"},
                 {"name": "name2", "email": "email2", "type": "security"},
             ],
+            "scope": [
+                "openid",
+                "email",
+                "profile",
+            ],
             "deployment_type": "create",
         }
         out_service = {
@@ -84,6 +89,7 @@ class TestDeployerKeycloak(unittest.TestCase):
                     "use.refresh.tokens": "false",
                 },
                 "consentRequired": False,
+                "optionalClientScopes": ["profile","email"],
                 "implicitFlowEnabled": "false",
                 "publicClient": "false",
                 "serviceAccountsEnabled": "false",
