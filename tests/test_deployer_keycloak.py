@@ -52,6 +52,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "publicClient": False,
             "serviceAccountsEnabled": False,
             "standardFlowEnabled": False,
+            "webOrigins": ["+"]
         }
 
         func_result = deployer_keycloak.format_keycloak_msg(new_service, ["example"])
