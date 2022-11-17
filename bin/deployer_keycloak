@@ -132,7 +132,7 @@ def process_data(messages, access_token, keycloak_config):
         external_id = ""
         client_id = ""
         try:
-            response, external_id, client_id = call_keycloak(msg, keycloak_agent, keycloak_config)
+            response, external_id, client_id = deploy_to_keycloak(msg, keycloak_agent, keycloak_config)
             log.info("Message received from Keycloak: " + str(response))
             ams_message = create_ams_response(response, service_id, deployer_name, external_id, client_id)
         except:
@@ -222,7 +222,7 @@ def update_service_account(agent, client_uuid, current_client_config, keycloak_c
 # - create
 # - delete
 # - edit
-def call_keycloak(registry_message, keycloak_agent, keycloak_config):
+def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
     deployment_type = registry_message.pop("deployment_type")
     realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes()
     default_client_scopes = []
