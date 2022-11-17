@@ -6,7 +6,7 @@ import argparse
 import logging
 from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
 from ServiceRegistryAms.PullPublish import PullPublish
-from Keycloak.KeycloakOidcClientApi import KeycloakOidcClientApi
+from Keycloak.KeycloakClientApi import KeycloakClientApi
 from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 
 # Setup logger
@@ -112,7 +112,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 
 
 # This function will gain an access token from the provided issuer and it will
-# make a POST request using KeycloakOidcClientApi to update or create the client
+# make a POST request using KeycloakClientApi to update or create the client
 #    Function update_data gets 4 arguments:
 #    - messages, the new incoming messages in json
 #    - auth_server, the url of the AuthZ Server
@@ -126,7 +126,7 @@ def update_data(messages, access_token, keycloak_config):
     # messages to be published
     pub_messages = []
     # Create Keycloak agent
-    keycloak_agent = KeycloakOidcClientApi(auth_server, realm, access_token)
+    keycloak_agent = KeycloakClientApi(auth_server, realm, access_token)
     for msg in messages:
         log.debug("Message from ams: " + str(msg))
         # Remove rciam service id to make request to Keycloak

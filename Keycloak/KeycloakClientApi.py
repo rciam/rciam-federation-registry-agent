@@ -6,7 +6,7 @@ Manages all clients on Keycloak
 """
 
 
-class KeycloakOidcClientApi:
+class KeycloakClientApi:
 
     """
     Class constructor
