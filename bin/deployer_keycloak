@@ -172,7 +172,7 @@ def create_client_scopes(agent, client_uuid, client_config):
             new_optional_client_scopes.remove(scope)
         else:
             # Create custom scope
-            agent.create_realm_client_scopes(scope)
+            agent.create_realm_oidc_client_scopes(scope)
 
     # Get updated client scopes
     realm_client_scopes = agent.sync_realm_client_scopes()
@@ -196,7 +196,7 @@ def update_client_scopes(agent, client_uuid, new_client_config, current_client_c
             new_optional_client_scopes.remove(scope)
         else:
             # Create custom scope
-            agent.create_realm_client_scopes(scope)
+            agent.create_realm_oidc_client_scopes(scope)
 
     # Get updated client scopes
     realm_client_scopes = agent.sync_realm_client_scopes()

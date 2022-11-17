@@ -164,13 +164,13 @@ class KeycloakClientApi:
         return scope_list
 
     """
-    Create realm client scope
+    Create realm OIDC client scope
     
     Returns:
         response (JSON Object): A registered client in JSON format
     """
 
-    def create_realm_client_scopes(self, scope_name):
+    def create_realm_oidc_client_scopes(self, scope_name):
         url = self.auth_url + "/admin/realms/" + self.realm + "/client-scopes"
         header = {"Authorization": "Bearer " + self.token}
         client_scope_object = {
