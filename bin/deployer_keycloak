@@ -113,13 +113,11 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 
 # This function will gain an access token from the provided issuer and it will
 # make a POST request using KeycloakClientApi to update or create the client
-#    Function update_data gets 4 arguments:
+#    Function process_data gets 4 arguments:
 #    - messages, the new incoming messages in json
-#    - auth_server, the url of the AuthZ Server
-#    - realm, the name of the realm
 #    - access_token
-#    - deployer_name
-def update_data(messages, access_token, keycloak_config):
+#    - keycloak_config, configuration file for Keycloak
+def process_data(messages, access_token, keycloak_config):
     auth_server = keycloak_config["auth_server"]
     realm = keycloak_config["realm"]
     deployer_name = ""
@@ -320,7 +318,7 @@ if __name__ == "__main__":
                     config["keycloak"]["client_secret"],
                 )
             ams.ack(ids)
-            responses = update_data(messages, access_token, config["keycloak"])
+            responses = process_data(messages, access_token, config["keycloak"])
             publish_ams(responses, ams)
         time.sleep(config["keycloak"]["ams"]["poll_interval"])
     log.info("Exit script")
