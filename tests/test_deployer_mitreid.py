@@ -64,15 +64,15 @@ class TestDeployerMitreid(unittest.TestCase):
     def test_update_data_fail(self):
         new_msg = [{"id": "12", "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}]
 
-        func_result = deployer_mitreid.update_data(new_msg,'','',1)
-        self.assertEqual(func_result, [{'attributes':{},'data': {"id":"12","agent_id":1,"status_code": 0, "state": "error", "error_description": "An error occurred while calling mitreId"}}])
+        func_result = deployer_mitreid.update_data(new_msg,'','','')
+        self.assertEqual(func_result, [{'attributes':{},'data': {"id":"12","status_code": 0, "state": "error", "error_description": "An error occurred while calling mitreId"}}])
 
     # Test update data calling mitreid successfully
     def test_update_data_success(self):
         new_msg = [{"id": "12", "client_id": "testId1", "service_name": "testName1", "service_description": "testDescription1", "contacts":[{"name": "name1", "email":"email1"}], "deployment_type": "create"}]
         deployer_mitreid.call_mitreid = MagicMock(return_value=({'status':200},"12", 'testId1'))
 
-        func_result = deployer_mitreid.update_data(new_msg,'url','token',1)
-        self.assertEqual(func_result, [{'attributes':{},'data': {"id":"12","external_id": "12","agent_id":1,"status_code": 200, "state": "deployed", "client_id": "testId1"}}])
+        func_result = deployer_mitreid.update_data(new_msg,'url','token','')
+        self.assertEqual(func_result, [{'attributes':{},'data': {"id":"12","external_id": "12","status_code": 200, "state": "deployed", "client_id": "testId1"}}])
 
         
