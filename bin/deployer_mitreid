@@ -69,8 +69,8 @@ def format_mitreid_msg(msg, deployment_type):
 #    - messages, the new incoming messages in json
 #    - issuer_url, the url of the issuer
 #    - access_token
-#    - agent_id
-def update_data(messages, issuer_url, access_token, agent_id):
+#    - deployer_name
+def update_data(messages, issuer_url, access_token, deployer_name):
     pub_messages = [] # messages to be published
     mitreid_agent = mitreidClientApi(issuer_url, access_token) # Create mitreid agent
     for msg in messages:
@@ -81,10 +81,10 @@ def update_data(messages, issuer_url, access_token, agent_id):
         try:
             response, external_id, client_id = call_mitreid(msg, mitreid_agent)
             log.info('Message received from mitreId: ' + str(response))
-            ams_message = create_ams_response(response, service_id, agent_id, external_id, client_id)
+            ams_message = create_ams_response(response, service_id, deployer_name, external_id, client_id)
         except:
             log.critical('Exception catch, return error to ams')
-            ams_message = create_ams_response({'status': 0,'error': 'An error occurred while calling mitreId'}, service_id, agent_id, external_id, client_id)
+            ams_message = create_ams_response({'status': 0,'error': 'An error occurred while calling mitreId'}, service_id, deployer_name, external_id, client_id)
         pub_messages.append({'attributes':{},'data':ams_message})
     return pub_messages
 
@@ -157,7 +157,7 @@ if __name__ == '__main__':
             log.info('Get access token from ' + config['mitreid']['issuer'])
             access_token = refreshTokenGrant(config['mitreid']['issuer'], config['mitreid']['refresh_token'], config['mitreid']['client_id'], config['mitreid']['client_secret'])
             ams.ack(ids)
-            responses = update_data(messages, config['mitreid']['issuer'], access_token, config['mitreid']['ams']['agent_id'])
+            responses = update_data(messages, config['mitreid']['issuer'], access_token, config['mitreid']['ams']['deployer_name'])
             publish_ams(responses,ams)
         time.sleep(config['mitreid']['ams']['poll_interval'])
     log.info('Exit script')

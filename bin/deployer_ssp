@@ -115,18 +115,18 @@ def call_ssp_syncer(ssp_url, metadata_key, request_timeout, cron_tag):
         return {"status": response.status_code, "response": repr(response)}
 
 
-def publish_ams(ams_agent, response, messages, agent_id):
+def publish_ams(ams_agent, response, messages, deployer_name):
     log.info("Publish message to ams")
     pub_messages = []
     for message in messages:
         try:
-            msg = create_ams_response(response, message["id"], agent_id, "", "")
+            msg = create_ams_response(response, message["id"], deployer_name, "", "")
         except:
             log.critical("Exception catch, return error to ams")
             msg = create_ams_response(
                 {"status": 0, "error": "An error occurred while creating AMS response"},
                 message["id"],
-                agent_id,
+                deployer_name,
                 "",
                 "",
             )
@@ -171,6 +171,6 @@ if __name__ == "__main__":
                 config["ssp"]["cron_tag"],
             )
             log.info("Message received from SSP: " + str(response))
-            publish_ams(ams, response, messages, config["ssp"]["ams"]["agent_id"])
+            publish_ams(ams, response, messages, config["ssp"]["ams"]["deployer_name"])
         time.sleep(config["ssp"]["ams"]["poll_interval"])
     log.info("Exit script")

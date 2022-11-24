@@ -118,11 +118,11 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
 #    - auth_server, the url of the AuthZ Server
 #    - realm, the name of the realm
 #    - access_token
-#    - agent_id
+#    - deployer_name
 def update_data(messages, access_token, keycloak_config):
     auth_server = keycloak_config["auth_server"]
     realm = keycloak_config["realm"]
-    agent_id = keycloak_config["ams"]["agent_id"]
+    deployer_name = keycloak_config["ams"]["deployer_name"]
     # messages to be published
     pub_messages = []
     # Create Keycloak agent
@@ -136,13 +136,13 @@ def update_data(messages, access_token, keycloak_config):
         try:
             response, external_id, client_id = call_keycloak(msg, keycloak_agent, keycloak_config)
             log.info("Message received from Keycloak: " + str(response))
-            ams_message = create_ams_response(response, service_id, agent_id, external_id, client_id)
+            ams_message = create_ams_response(response, service_id, deployer_name, external_id, client_id)
         except:
             log.critical("Exception catch, return error to ams")
             ams_message = create_ams_response(
                 {"status": 0, "error": "An error occurred while calling Keycloak"},
                 service_id,
-                agent_id,
+                deployer_name,
                 external_id,
                 client_id,
             )

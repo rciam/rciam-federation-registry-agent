@@ -67,7 +67,7 @@ configuration options are described below.
       "token": "ams-token-keycloak",
       "pub_topic": "ams-publish-topic-keycloak",
       "poll_interval": 1,
-      "agent_id": "1"
+      "deployer_name": "1"
     },
     "auth_server": "https://example.com/auth",
     "realm": "example",
@@ -83,7 +83,7 @@ configuration options are described below.
       "token": "ams-token-mitreid",
       "pub_topic": "ams-publish-topic-mitreid",
       "poll_interval": 1,
-      "agent_id": "1"
+      "deployer_name": "1"
     },
     "issuer": "https://example.com/oidc",
     "refresh_token": "refresh token",
@@ -99,7 +99,7 @@ configuration options are described below.
       "token": "ams-token-ssp",
       "pub_topic": "ams-publish-topic-ssp",
       "poll_interval": 1,
-      "agent_id": "1"
+      "deployer_name": "1"
     },
     "metadata_conf_file": "/path/to/ssp/metadata/file.php",
     "cron_secret": "SSP cron secret",
