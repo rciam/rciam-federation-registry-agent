@@ -17,8 +17,10 @@ def get_log_conf(log_config_file=None):
 def create_ams_response(response, service_id, deployer_name, external_id, client_id):
     msgNew = {}
     msgNew["id"] = service_id
-    msgNew["deployer_name"] = deployer_name
     msgNew["status_code"] = response["status"]
+    if len(deployer_name) > 0:
+        msgNew["deployer_name"] = deployer_name
+
     if len(external_id) > 0:
         msgNew["external_id"] = external_id
 

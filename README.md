@@ -66,8 +66,7 @@ configuration options are described below.
       "pull_sub": "ams-sub-keycloak",
       "token": "ams-token-keycloak",
       "pub_topic": "ams-publish-topic-keycloak",
-      "poll_interval": 1,
-      "deployer_name": "1"
+      "poll_interval": 1
     },
     "auth_server": "https://example.com/auth",
     "realm": "example",
@@ -82,8 +81,7 @@ configuration options are described below.
       "pull_sub": "ams-sub-mitreid",
       "token": "ams-token-mitreid",
       "pub_topic": "ams-publish-topic-mitreid",
-      "poll_interval": 1,
-      "deployer_name": "1"
+      "poll_interval": 1
     },
     "issuer": "https://example.com/oidc",
     "refresh_token": "refresh token",

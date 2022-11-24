@@ -157,7 +157,7 @@ if __name__ == '__main__':
             log.info('Get access token from ' + config['mitreid']['issuer'])
             access_token = refreshTokenGrant(config['mitreid']['issuer'], config['mitreid']['refresh_token'], config['mitreid']['client_id'], config['mitreid']['client_secret'])
             ams.ack(ids)
-            responses = update_data(messages, config['mitreid']['issuer'], access_token, config['mitreid']['ams']['deployer_name'])
+            responses = update_data(messages, config['mitreid']['issuer'], access_token, "")
             publish_ams(responses,ams)
         time.sleep(config['mitreid']['ams']['poll_interval'])
     log.info('Exit script')
