@@ -233,7 +233,6 @@ class TestDeployerKeycloak(unittest.TestCase):
         ]
 
         keycloak_config = {
-            "ams": {"agent_id": 1},
             "auth_server": "https://example.com/auth",
             "realm": "example",
         }
@@ -246,7 +245,6 @@ class TestDeployerKeycloak(unittest.TestCase):
                     "attributes": {},
                     "data": {
                         "id": 12,
-                        "agent_id": 1,
                         "status_code": 0,
                         "state": "error",
                         "error_description": "An error occurred while calling Keycloak",
@@ -272,7 +270,6 @@ class TestDeployerKeycloak(unittest.TestCase):
         )
 
         keycloak_config = {
-            "ams": {"agent_id": 1},
             "auth_server": "https://example.com/auth",
             "realm": "example",
         }
@@ -286,7 +283,6 @@ class TestDeployerKeycloak(unittest.TestCase):
                     "data": {
                         "id": 12,
                         "external_id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
-                        "agent_id": 1,
                         "status_code": 200,
                         "state": "deployed",
                         "client_id": "testId1",
