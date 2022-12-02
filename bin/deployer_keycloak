@@ -13,7 +13,8 @@ from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
+jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
+jsonSamlTemplate = '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"},"consentRequired":true}'
 
 
 def map_token_endpoint_value(key):
@@ -32,8 +33,75 @@ def map_token_endpoint_value(key):
 # format_keycloak_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from Keycloak API
 def format_keycloak_msg(msg, realm_default_client_scopes):
-    new_msg = json.loads(jsonTemplate)
-    new_msg["defaultClientScopes"] = realm_default_client_scopes
+    if "protocol" in msg:
+        # Options for OIDC clients
+        if msg["protocol"] == "oidc":
+            new_msg = json.loads(jsonOidcTemplate)
+            new_msg["defaultClientScopes"] = realm_default_client_scopes
+            new_msg["protocol"] = "openid-connect"
+            if "client_id" in msg and msg["client_id"]:
+                new_msg["clientId"] = msg.pop("client_id")
+            if "redirect_uris" in msg:
+                new_msg["redirectUris"] = msg.pop("redirect_uris")
+            if "scope" in msg:
+                new_msg["optionalClientScopes"] = msg.pop("scope")
+                if "openid" in new_msg["optionalClientScopes"]:
+                    new_msg["optionalClientScopes"].remove("openid")
+            if "grant_types" in msg:
+                for grant_type in msg["grant_types"]:
+                    if grant_type == "authorization_code":
+                        new_msg["standardFlowEnabled"] = True
+                    if grant_type == "client_credentials":
+                        new_msg["serviceAccountsEnabled"] = True
+                    if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
+                        new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
+                    if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
+                        new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
+                    if grant_type == "implicit":
+                        new_msg["implicitFlowEnabled"] = True
+            if "token_endpoint_auth_method" in msg:
+                if msg["token_endpoint_auth_method"] == "none":
+                    new_msg["publicClient"] = True
+                new_msg["clientAuthenticatorType"] = map_token_endpoint_value(msg.pop("token_endpoint_auth_method"))
+            if "client_secret" in msg:
+                new_msg["secret"] = msg.pop("client_secret")
+            if "token_endpoint_auth_signing_alg" in msg:
+                new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop("token_endpoint_auth_signing_alg")
+            if "jwks" in msg:
+                new_msg["attributes"]["use.jwks.string"] = "true"
+                new_msg["attributes"]["jwks.string"] = json.dumps(msg.pop("jwks"))
+            if "jwks_uri" in msg:
+                new_msg["attributes"]["use.jwks.url"] = True
+                new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
+            if "refresh_token_validity_seconds" in msg:
+                new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
+                if "reuse_refresh_token" in msg:
+                    rotate_refresh_token = str(not msg.pop("reuse_refresh_token"))
+                    new_msg["attributes"]["revoke.refresh.token"] = rotate_refresh_token.lower()
+            if "code_challenge_method" in msg:
+                new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
+            if "access_token_validity_seconds" in msg:
+                if msg["access_token_validity_seconds"] < 60:
+                    new_msg["attributes"]["access.token.lifespan"] = "60"
+                else:
+                    new_msg["attributes"]["access.token.lifespan"] = str(msg.pop("access_token_validity_seconds"))
+            if "id_token_timeout_seconds" in msg:
+                new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
+            if "device_code_validity_seconds" in msg:
+                new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
+            if new_msg["standardFlowEnabled"] == True or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True:
+                new_msg["consentRequired"] = True
+        # Options for SAML clients
+        elif msg["protocol"] == "saml":
+            new_msg = json.loads(jsonSamlTemplate)
+            new_msg["protocol"] = msg.pop("protocol")
+            if "metadata_url" in msg:
+                new_msg["attributes"]["saml.metadata.url"] = msg.pop("metadata_url")
+            if "entity_id" in msg:
+                new_msg["clientId"] = msg.pop("entity_id")
+            if "requested_attributes" in msg:
+                new_msg["defaultClientScopes"], new_msg["protocolMappers"] = add_saml_scopes_and_mappers(msg["requested_attributes"])
+    # Options for any type of client
     emails = []
     if "service_name" in msg:
         new_msg["name"] = msg.pop("service_name")
@@ -56,58 +124,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         # Remove duplicate entries
         emails = list(set(emails))
         new_msg["attributes"]["contacts"] = ",".join(emails)
-    if "client_id" in msg and msg["client_id"]:
-        new_msg["clientId"] = msg.pop("client_id")
-    if "redirect_uris" in msg:
-        new_msg["redirectUris"] = msg.pop("redirect_uris")
-    if "scope" in msg:
-        new_msg["optionalClientScopes"] = msg.pop("scope")
-        if "openid" in new_msg["optionalClientScopes"]:
-            new_msg["optionalClientScopes"].remove("openid")
-    if "grant_types" in msg:
-        for grant_type in msg["grant_types"]:
-            if grant_type == "authorization_code":
-                new_msg["standardFlowEnabled"] = True
-            if grant_type == "client_credentials":
-                new_msg["serviceAccountsEnabled"] = True
-            if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
-                new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
-            if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
-                new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
-            if grant_type == "implicit":
-                new_msg["implicitFlowEnabled"] = True
-    if "token_endpoint_auth_method" in msg:
-        if msg["token_endpoint_auth_method"] == "none":
-            new_msg["publicClient"] = True
-        new_msg["clientAuthenticatorType"] = map_token_endpoint_value(msg.pop("token_endpoint_auth_method"))
-    if "client_secret" in msg:
-        new_msg["secret"] = msg.pop("client_secret")
-    if "token_endpoint_auth_signing_alg" in msg:
-        new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop("token_endpoint_auth_signing_alg")
-    if "jwks" in msg:
-        new_msg["attributes"]["use.jwks.string"] = "true"
-        new_msg["attributes"]["jwks.string"] = json.dumps(msg.pop("jwks"))
-    if "jwks_uri" in msg:
-        new_msg["attributes"]["use.jwks.url"] = True
-        new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
-    if "refresh_token_validity_seconds" in msg:
-        new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
-        if "reuse_refresh_token" in msg:
-            rotate_refresh_token = str(not msg.pop("reuse_refresh_token"))
-            new_msg["attributes"]["revoke.refresh.token"] = rotate_refresh_token.lower()
-    if "code_challenge_method" in msg:
-        new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
-    if "access_token_validity_seconds" in msg:
-        if msg["access_token_validity_seconds"] < 60:
-            new_msg["attributes"]["access.token.lifespan"] = "60"
-        else:
-            new_msg["attributes"]["access.token.lifespan"] = str(msg.pop("access_token_validity_seconds"))
-    if "id_token_timeout_seconds" in msg:
-        new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
-    if "device_code_validity_seconds" in msg:
-        new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
-    if new_msg["standardFlowEnabled"] == True or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True:
-        new_msg["consentRequired"] = True
+
     return new_msg
 
 
