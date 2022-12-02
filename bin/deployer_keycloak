@@ -233,6 +233,27 @@ def update_client_scopes(agent, client_uuid, new_client_config, current_client_c
     for add_scope in add_client_scopes:
         agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope], protocol)
 
+def add_saml_scopes_and_mappers(requested_attributes):
+    scopes = []
+    mappers = []
+    for attribute in requested_attributes:
+        scopes.append(attribute["friendly_name"])
+        if attribute["type"] == "custom":
+            mapper_object = {
+                "name": attribute["friendly_name"],
+                "protocol": "saml",
+                "protocolMapper": "saml-user-attribute-mapper",
+                "config": {
+                    "attribute.nameformat": "URI Reference",
+                    "user.attribute": attribute["friendly_name"],
+                    "friendly.name": attribute["friendly_name"],
+                    "attribute.name": attribute["name"]
+                }
+            }
+            mappers.append(mapper_object)
+    return scopes, mappers
+
+
 # Update the optional client scopes of the client
 def update_service_account(agent, client_uuid, current_client_config, keycloak_config):
     service_account_profile = agent.get_service_account_user(client_uuid)
