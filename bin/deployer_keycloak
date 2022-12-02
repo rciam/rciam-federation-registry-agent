@@ -323,6 +323,8 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
                 and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == False
             ):
                 keycloak_agent.update_client_authz_permissions(external_id, "disable")
+        if protocol == "saml":
+            update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
     return response, external_id, client_id
 
 
