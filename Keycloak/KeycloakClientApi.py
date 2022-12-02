@@ -166,9 +166,6 @@ class KeycloakClientApi:
 
     """
     Create realm OIDC client scope
-    
-    Returns:
-        response (JSON Object): A registered client in JSON format
     """
 
     def create_realm_oidc_client_scopes(self, scope_name):
@@ -187,37 +184,42 @@ class KeycloakClientApi:
         self.http_request("POST", url, header, client_scope_object)
 
     """
-    Add client scope to the optional client scopes list of the client
-    
-    Returns:
-        response (JSON Object): A registered client in JSON format
+    Add client scope to the default or optional client scopes list of the client
     """
 
-    def add_client_scope_by_id(self, keycloak_id, client_scope_id):
+    def add_client_scope_by_id(self, keycloak_id, client_scope_id, protocol):
+        if protocol == "saml":
+            client_scopes_path = "/default-client-scopes/"
+        else:
+            client_scopes_path = "/optional-client-scopes/"
         url = (
             self.auth_url
             + "/admin/realms/"
             + self.realm
             + "/clients/"
             + keycloak_id
-            + "/optional-client-scopes/"
+            + client_scopes_path
             + client_scope_id
         )
         header = {"Authorization": "Bearer " + self.token}
         self.http_request("PUT", url, header)
 
     """
-    Remove client scope to the optional client scopes list of the client
+    Remove client scope from the default or optional client scopes list of the client
     """
 
-    def remove_client_scope_by_id(self, keycloak_id, client_scope_id):
+    def remove_client_scope_by_id(self, keycloak_id, client_scope_id, protocol="openid-connect"):
+        if protocol == "saml":
+            client_scopes_path = "/default-client-scopes/"
+        else:
+            client_scopes_path = "/optional-client-scopes/"
         url = (
             self.auth_url
             + "/admin/realms/"
             + self.realm
             + "/clients/"
             + keycloak_id
-            + "/optional-client-scopes/"
+            + client_scopes_path
             + client_scope_id
         )
         header = {"Authorization": "Bearer " + self.token}
