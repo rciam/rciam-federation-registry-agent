@@ -1,4 +1,5 @@
 import requests, json
+from urllib.parse import quote
 
 """
 Manages all clients on Keycloak
@@ -34,7 +35,7 @@ class KeycloakClientApi:
     """
 
     def get_client_by_id(self, client_id):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
         header = {"Authorization": "Bearer " + self.token}
 
         return self.http_request("GET", url, header)
@@ -70,7 +71,7 @@ class KeycloakClientApi:
     """
 
     def update_client(self, client_id, client_object):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
         header = {
             "Authorization": "Bearer " + self.token,
             "Content-Type": "application/json",
@@ -89,7 +90,7 @@ class KeycloakClientApi:
     """
 
     def delete_client(self, client_id):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
         header = {"Authorization": "Bearer " + self.token}
 
         return self.http_request("DELETE", url, header)
