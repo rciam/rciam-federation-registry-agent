@@ -197,36 +197,41 @@ def create_client_scopes(agent, client_uuid, client_config):
     for add_scope in create_client_scopes:
         agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
 
-# Update the optional client scopes of the client
+# Update the client scopes of the client
 def update_client_scopes(agent, client_uuid, new_client_config, current_client_config):
+    protocol = current_client_config["protocol"]
+    if protocol == "saml":
+        key = "defaultClientScopes"
+    else:
+        key = "optionalClientScopes"
     realm_client_scopes = agent.sync_realm_client_scopes()
-    current_optional_client_scopes = current_client_config["optionalClientScopes"]
-    new_optional_client_scopes = new_client_config["optionalClientScopes"]
+    current_client_scopes = current_client_config[key]
+    new_client_scopes = new_client_config[key]
 
-    # Custom scopes that are not created in Keycloak
-    create_client_scopes = list(set(new_optional_client_scopes) - set(realm_client_scopes.keys()))
-    parametric_scope_delimiter = "?value="
-    for scope in create_client_scopes:
-        if parametric_scope_delimiter in scope:
-            # Ignore parametric scopes
-            log.info("The scope '" + scope + "' will be ignored.")
-            new_optional_client_scopes.remove(scope)
-        else:
-            # Create custom scope
-            agent.create_realm_oidc_client_scopes(scope)
+    if protocol == "openid-connect":
+        # Custom scopes that are not created in Keycloak
+        create_client_scopes = list(set(new_client_scopes) - set(realm_client_scopes.keys()))
+        parametric_scope_delimiter = "?value="
+        for scope in create_client_scopes:
+            if parametric_scope_delimiter in scope:
+                # Ignore parametric scopes
+                log.info("The scope '" + scope + "' will be ignored.")
+                new_client_scopes.remove(scope)
+            else:
+                # Create custom scope
+                agent.create_realm_oidc_client_scopes(scope)
 
-    # Get updated client scopes
-    realm_client_scopes = agent.sync_realm_client_scopes()
+        # Get updated client scopes
+        realm_client_scopes = agent.sync_realm_client_scopes()
 
-    remove_client_scopes = list(set(current_optional_client_scopes) - set(new_optional_client_scopes))
-    add_client_scopes = list(set(new_optional_client_scopes) - set(current_optional_client_scopes))
+    remove_client_scopes = list(set(current_client_scopes) - set(new_client_scopes))
+    add_client_scopes = list(set(new_client_scopes) - set(current_client_scopes))
 
     for remove_scope in remove_client_scopes:
-        agent.remove_client_scope_by_id(client_uuid, realm_client_scopes[remove_scope])
+        agent.remove_client_scope_by_id(client_uuid, realm_client_scopes[remove_scope], protocol)
 
     for add_scope in add_client_scopes:
-        agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
-
+        agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope], protocol)
 
 # Update the optional client scopes of the client
 def update_service_account(agent, client_uuid, current_client_config, keycloak_config):
