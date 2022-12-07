@@ -25,6 +25,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "client_id": "testId1",
             "service_name": "testName1",
             "service_description": "testDescription1",
+            "protocol": "oidc",
             "contacts": [
                 {"name": "name1", "email": "email1", "type": "technical"},
                 {"name": "name2", "email": "email2", "type": "security"},
@@ -49,6 +50,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "description": "testDescription1",
             "implicitFlowEnabled": False,
             "name": "testName1",
+            "protocol": "openid-connect",
             "publicClient": False,
             "serviceAccountsEnabled": False,
             "standardFlowEnabled": False,
@@ -59,11 +61,12 @@ class TestDeployerKeycloak(unittest.TestCase):
         self.assertEqual(func_result, out_service)
 
     # Test calling Keycloak to create a new entry
-    def test_call_keycloak_create(self):
+    def test_deploy_to_keycloak_create(self):
         new_service = {
             "client_id": "testId1",
             "service_name": "testName1",
             "service_description": "testDescription1",
+            "protocol": "oidc",
             "contacts": [
                 {"name": "name1", "email": "email1", "type": "technical"},
                 {"name": "name2", "email": "email2", "type": "security"},
@@ -99,6 +102,7 @@ class TestDeployerKeycloak(unittest.TestCase):
                 "defaultClientScopes": ["example"],
                 "description": "testDescription1",
                 "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
+                "protocol": "openid-connect",
                 "implicitFlowEnabled": False,
                 "name": "testName1",
                 "publicClient": False,
@@ -123,16 +127,17 @@ class TestDeployerKeycloak(unittest.TestCase):
             "service_account": {"attribute_name": "voPersonID", "candidate": "id", "scope": "example.org"}
         }
 
-        func_result = deployer_keycloak.call_keycloak(new_service, mock, service_account_config)
+        func_result = deployer_keycloak.deploy_to_keycloak(new_service, mock, service_account_config)
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
 
     # Test calling Keycloak to delete an entry
-    def test_call_keycloak_delete(self):
+    def test_deploy_to_keycloak_delete(self):
         new_service = {
             "external_id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
             "client_id": "testId1",
             "service_name": "testName1",
             "service_description": "testDescription1",
+            "protocol": "oidc",
             "contacts": [
                 {"name": "name1", "email": "email1", "type": "technical"},
                 {"name": "name2", "email": "email2", "type": "security"},
@@ -153,16 +158,17 @@ class TestDeployerKeycloak(unittest.TestCase):
         mock = MagicMock()
         mock.delete_client = MagicMock(return_value=out_service)
 
-        func_result = deployer_keycloak.call_keycloak(new_service, mock, "config")
+        func_result = deployer_keycloak.deploy_to_keycloak(new_service, mock, "config")
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
 
     # Test calling Keycloak to update an entry
-    def test_call_keycloak_update(self):
+    def test_deploy_to_keycloak_update(self):
         new_service = {
             "external_id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
             "client_id": "testId1",
             "service_name": "testName1",
             "service_description": "testDescription1",
+            "protocol": "oidc",
             "contacts": [
                 {"name": "name1", "email": "email1", "type": "technical"},
                 {"name": "name2", "email": "email2", "type": "security"},
@@ -190,6 +196,7 @@ class TestDeployerKeycloak(unittest.TestCase):
                 "clientId": "testId1",
                 "description": "testDescription1",
                 "id": "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6",
+                "protocol": "openid-connect",
                 "implicitFlowEnabled": False,
                 "name": "testName1",
                 "defaultClientScopes": ["example"],
@@ -216,11 +223,11 @@ class TestDeployerKeycloak(unittest.TestCase):
         mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
         mock.get_client_authz_permissions = MagicMock(return_value=client_authz_permissions)
 
-        func_result = deployer_keycloak.call_keycloak(new_service, mock, "config")
+        func_result = deployer_keycloak.deploy_to_keycloak(new_service, mock, "config")
         self.assertEqual(func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1"))
 
     # Test update data with error when calling Keycloak
-    def test_update_data_fail(self):
+    def test_process_data_fail(self):
         new_msg = [
             {
                 "id": 12,
@@ -237,7 +244,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "realm": "example",
         }
 
-        func_result = deployer_keycloak.update_data(new_msg, "", keycloak_config)
+        func_result = deployer_keycloak.process_data(new_msg, "", keycloak_config)
         self.assertEqual(
             func_result,
             [
@@ -254,7 +261,7 @@ class TestDeployerKeycloak(unittest.TestCase):
         )
 
     # Test update data calling Keycloak successfully
-    def test_update_data_success(self):
+    def test_process_data_success(self):
         new_msg = [
             {
                 "id": 12,
@@ -265,7 +272,7 @@ class TestDeployerKeycloak(unittest.TestCase):
                 "deployment_type": "create",
             }
         ]
-        deployer_keycloak.call_keycloak = MagicMock(
+        deployer_keycloak.deploy_to_keycloak = MagicMock(
             return_value=({"status": 200}, "a1a2a3a4-b5b6-c7c8-d9d0-e1e2e3e4e5e6", "testId1")
         )
 
@@ -274,7 +281,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "realm": "example",
         }
 
-        func_result = deployer_keycloak.update_data(new_msg, "token", keycloak_config)
+        func_result = deployer_keycloak.process_data(new_msg, "token", keycloak_config)
         self.assertEqual(
             func_result,
             [
