@@ -100,7 +100,8 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
             if "entity_id" in msg:
                 new_msg["clientId"] = msg.pop("entity_id")
             if "requested_attributes" in msg:
-                new_msg["defaultClientScopes"], new_msg["protocolMappers"] = add_saml_scopes_and_mappers(msg["requested_attributes"])
+                client_default_client_scopes, new_msg["protocolMappers"] = add_saml_scopes_and_mappers(msg["requested_attributes"])
+                new_msg["defaultClientScopes"] = list(set(client_default_client_scopes + realm_default_client_scopes))
     # Options for any type of client
     emails = []
     if "service_name" in msg:
@@ -268,11 +269,12 @@ def update_service_account(agent, client_uuid, current_client_config, keycloak_c
 def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
     deployment_type = registry_message.pop("deployment_type")
     protocol = registry_message["protocol"]
-    default_client_scopes = []
     if protocol == "oidc":
-        realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes()
-        for scope in realm_default_client_scopes["response"]:
-            default_client_scopes.append(scope["name"])
+        protocol = "openid-connect"
+    default_client_scopes = []
+    realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes(protocol)
+    for scope in realm_default_client_scopes:
+        default_client_scopes.append(scope["name"])
     keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
     log.debug("Formated message for Keycloak: " + str(keycloak_msg))
     response = {}
@@ -288,7 +290,7 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
             else:
                 response_external_id = keycloak_agent.get_client_by_id(client_id)
                 external_id = response_external_id["response"]["id"]
-        if protocol == "oidc":
+        if protocol == "openid-connect":
             create_client_scopes(keycloak_agent, external_id, keycloak_msg)
             if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
                 keycloak_agent.update_client_authz_permissions(external_id, "enable")
@@ -306,7 +308,7 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
         log.info("Update client with id: " + str(client_id))
         response = keycloak_agent.update_client(client_id, keycloak_msg)
         external_id = response["response"]["id"]
-        if protocol == "oidc":
+        if protocol == "openid-connect":
             update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
             if response["response"]["serviceAccountsEnabled"]:
                 update_service_account(

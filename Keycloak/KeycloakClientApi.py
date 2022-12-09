@@ -140,11 +140,18 @@ class KeycloakClientApi:
         response (JSON Object): A registered client in JSON format
     """
 
-    def get_realm_default_client_scopes(self):
+    def get_realm_default_client_scopes(self, protocol):
         url = self.auth_url + "/admin/realms/" + self.realm + "/default-default-client-scopes"
         header = {"Authorization": "Bearer " + self.token}
 
-        return self.http_request("GET", url, header)
+        response = self.http_request("GET", url, header)
+
+        default_client_scopes = []
+        for client_scope in response["response"]:
+            if client_scope["protocol"] == protocol:
+                default_client_scopes.append(client_scope)
+
+        return default_client_scopes
 
     """
     Sync realm client scopes
