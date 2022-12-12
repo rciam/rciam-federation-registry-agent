@@ -13,8 +13,8 @@ from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
-jsonSamlTemplate = '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"},"consentRequired":true}'
+jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
+jsonSamlTemplate = '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"}}'
 
 
 def map_token_endpoint_value(key):
@@ -32,13 +32,17 @@ def map_token_endpoint_value(key):
 
 # format_keycloak_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from Keycloak API
-def format_keycloak_msg(msg, realm_default_client_scopes):
+def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
     if "protocol" in msg:
         # Options for OIDC clients
         if msg["protocol"] == "oidc":
             new_msg = json.loads(jsonOidcTemplate)
             new_msg["defaultClientScopes"] = realm_default_client_scopes
             new_msg["protocol"] = "openid-connect"
+            if "oidc_consent" in keycloak_config:
+                new_msg["consentRequired"] = keycloak_config["oidc_consent"]
+            else:
+                new_msg["consentRequired"] = False
             if "client_id" in msg and msg["client_id"]:
                 new_msg["clientId"] = msg.pop("client_id")
             if "redirect_uris" in msg:
@@ -95,6 +99,10 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         elif msg["protocol"] == "saml":
             new_msg = json.loads(jsonSamlTemplate)
             new_msg["protocol"] = msg.pop("protocol")
+            if "saml_consent" in keycloak_config:
+                new_msg["consentRequired"] = keycloak_config["saml_consent"]
+            else:
+                new_msg["consentRequired"] = True
             if "metadata_url" in msg:
                 new_msg["attributes"]["saml.metadata.url"] = msg.pop("metadata_url")
             if "entity_id" in msg:
@@ -275,7 +283,7 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
     realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes(protocol)
     for scope in realm_default_client_scopes:
         default_client_scopes.append(scope["name"])
-    keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
+    keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes, keycloak_config)
     log.debug("Formatted message for Keycloak: " + str(keycloak_msg))
     response = {}
     external_id = ""

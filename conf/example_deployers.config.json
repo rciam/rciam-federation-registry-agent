@@ -18,7 +18,9 @@
       "attribute_name": "voPersonID",
       "candidate": "id",
       "scope": "example.org"
-    }
+    },
+    "oidc_consent": false,
+    "saml_consent": true
   },
   "log_conf": "conf/logger.conf",
   "mitreid": {
