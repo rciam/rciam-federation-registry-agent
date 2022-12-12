@@ -109,7 +109,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
                 new_msg["clientId"] = msg.pop("entity_id")
             if "requested_attributes" in msg:
                 client_default_client_scopes, new_msg["protocolMappers"] = add_saml_scopes_and_mappers(msg["requested_attributes"])
-                new_msg["defaultClientScopes"] = list(set(client_default_client_scopes + realm_default_client_scopes))
+                new_msg["defaultClientScopes"] = list(sorted(set(client_default_client_scopes + realm_default_client_scopes)))
     # Options for any type of client
     emails = []
     if "service_name" in msg:
