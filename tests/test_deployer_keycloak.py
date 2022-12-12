@@ -60,7 +60,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "webOrigins": ["+"],
         }
 
-        func_result = deployer_keycloak_oidc.format_keycloak_msg(new_service, ["example"])
+        func_result = deployer_keycloak_oidc.format_keycloak_msg(new_service, ["example"], {})
         self.assertEqual(func_result, out_service)
 
     # Test calling Keycloak to create a new entry
@@ -114,10 +114,9 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        realm_default_client_scopes = {
-            "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope3", "name": "example", "protocol": "openid-connect"}],
-            "status": 201,
-        }
+        realm_default_client_scopes = [
+            {"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope3", "name": "example", "protocol": "openid-connect"}
+        ]
 
         mock = MagicMock()
         mock.create_client = MagicMock(return_value=out_service)
@@ -202,10 +201,10 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 200,
         }
-        realm_default_client_scopes = {
-            "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope7", "name": "example", "protocol": "openid-connect"}],
-            "status": 200,
-        }
+        realm_default_client_scopes = [
+            {"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope7", "name": "example", "protocol": "openid-connect"}
+        ]
+
         client_authz_permissions = {
             "response": {"enabled": False},
             "status": 200,
@@ -305,16 +304,16 @@ class TestDeployerKeycloak(unittest.TestCase):
             ],
             "requested_attributes": [
                 {
-                    "friendly_name": "voPersonID",
-                    "name": "urn:oid:1.3.6.1.4.1.25178.4.1.6",
-                    "type": "standard",
+                    "friendly_name": "uid",
+                    "name": "urn:oid:uid",
+                    "type": "custom",
                     "required": True,
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                 },
                 {
-                    "friendly_name": "uid",
-                    "name": "urn:oid:uid",
-                    "type": "custom",
+                    "friendly_name": "voPersonID",
+                    "name": "urn:oid:1.3.6.1.4.1.25178.4.1.6",
+                    "type": "standard",
                     "required": True,
                     "name_format": "urn:oasis:names:tc:SAML:2.0:attrname-format:uri",
                 },
@@ -330,7 +329,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "clientId": "https://example.org/testSamlId",
             "consentRequired": True,
-            "defaultClientScopes": ["voPersonID", "uid"],
+            "defaultClientScopes": ["example", "uid", "voPersonID"],
             "description": "testDescription",
             "name": "testName",
             "protocol": "saml",
@@ -349,7 +348,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             ],
         }
 
-        func_result = deployer_keycloak_saml.format_keycloak_msg(new_message, ["example"])
+        func_result = deployer_keycloak_saml.format_keycloak_msg(new_message, ["example"], {})
         self.assertEqual(func_result, out_message)
 
     # Test calling Keycloak to create a new entry
@@ -419,18 +418,14 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        # realm_default_client_scopes = {
-        #     "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope4", "name": "example", "protocol": "saml"}],
-        #     "status": 201,
-        # }
+        realm_default_client_scopes = [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope4", "name": "example", "protocol": "saml"}]
 
         mock = MagicMock()
         mock.create_client = MagicMock(return_value=out_service)
         mock.get_client_by_id = MagicMock(return_value=out_service)
-        # mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
         func_result = deployer_keycloak_saml.deploy_to_keycloak(new_service, mock, "config")
-        # self.assertEqual(func_result, ({"status": 200}, "a1a2a3a4-b5b6-c7c8-d9d0-testSamlId", "testSamlId"))
         self.assertEqual(
             func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-testSamlId", "https://example.org/testSamlId")
         )
@@ -547,14 +542,11 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        # realm_default_client_scopes = {
-        #     "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope8", "name": "example", "protocol": "saml"}],
-        #     "status": 200,
-        # }
+        realm_default_client_scopes = [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope8", "name": "example", "protocol": "saml"}]
 
         mock = MagicMock()
         mock.update_client = MagicMock(return_value=out_service)
-        # mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
         func_result = deployer_keycloak_saml.deploy_to_keycloak(new_service, mock, "config")
         self.assertEqual(
