@@ -6,14 +6,15 @@ import argparse
 import logging
 from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
 from ServiceRegistryAms.PullPublish import PullPublish
-from Keycloak.KeycloakOidcClientApi import KeycloakOidcClientApi
+from Keycloak.KeycloakClientApi import KeycloakClientApi
 from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
 
 # Setup logger
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"consentRequired":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
+jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
+jsonSamlTemplate = '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"}}'
 
 
 def map_token_endpoint_value(key):
@@ -31,9 +32,85 @@ def map_token_endpoint_value(key):
 
 # format_keycloak_msg gets a message from ams rciam-federation in snake_case
 # and modifies it to camelCase format to be acceptable from Keycloak API
-def format_keycloak_msg(msg, realm_default_client_scopes):
-    new_msg = json.loads(jsonTemplate)
-    new_msg["defaultClientScopes"] = realm_default_client_scopes
+def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
+    if "protocol" in msg:
+        # Options for OIDC clients
+        if msg["protocol"] == "oidc":
+            new_msg = json.loads(jsonOidcTemplate)
+            new_msg["defaultClientScopes"] = realm_default_client_scopes
+            new_msg["protocol"] = "openid-connect"
+            if "oidc_consent" in keycloak_config:
+                new_msg["consentRequired"] = keycloak_config["oidc_consent"]
+            else:
+                new_msg["consentRequired"] = False
+            if "client_id" in msg and msg["client_id"]:
+                new_msg["clientId"] = msg.pop("client_id")
+            if "redirect_uris" in msg:
+                new_msg["redirectUris"] = msg.pop("redirect_uris")
+            if "scope" in msg:
+                new_msg["optionalClientScopes"] = msg.pop("scope")
+                if "openid" in new_msg["optionalClientScopes"]:
+                    new_msg["optionalClientScopes"].remove("openid")
+            if "grant_types" in msg:
+                for grant_type in msg["grant_types"]:
+                    if grant_type == "authorization_code":
+                        new_msg["standardFlowEnabled"] = True
+                    if grant_type == "client_credentials":
+                        new_msg["serviceAccountsEnabled"] = True
+                    if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
+                        new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
+                    if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
+                        new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
+                    if grant_type == "implicit":
+                        new_msg["implicitFlowEnabled"] = True
+            if "token_endpoint_auth_method" in msg:
+                if msg["token_endpoint_auth_method"] == "none":
+                    new_msg["publicClient"] = True
+                new_msg["clientAuthenticatorType"] = map_token_endpoint_value(msg.pop("token_endpoint_auth_method"))
+            if "client_secret" in msg:
+                new_msg["secret"] = msg.pop("client_secret")
+            if "token_endpoint_auth_signing_alg" in msg:
+                new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop("token_endpoint_auth_signing_alg")
+            if "jwks" in msg:
+                new_msg["attributes"]["use.jwks.string"] = "true"
+                new_msg["attributes"]["jwks.string"] = json.dumps(msg.pop("jwks"))
+            if "jwks_uri" in msg:
+                new_msg["attributes"]["use.jwks.url"] = True
+                new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
+            if "refresh_token_validity_seconds" in msg:
+                new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
+                if "reuse_refresh_token" in msg:
+                    rotate_refresh_token = str(not msg.pop("reuse_refresh_token"))
+                    new_msg["attributes"]["revoke.refresh.token"] = rotate_refresh_token.lower()
+            if "code_challenge_method" in msg:
+                new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
+            if "access_token_validity_seconds" in msg:
+                if msg["access_token_validity_seconds"] < 60:
+                    new_msg["attributes"]["access.token.lifespan"] = "60"
+                else:
+                    new_msg["attributes"]["access.token.lifespan"] = str(msg.pop("access_token_validity_seconds"))
+            if "id_token_timeout_seconds" in msg:
+                new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
+            if "device_code_validity_seconds" in msg:
+                new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
+            if new_msg["standardFlowEnabled"] == True or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True:
+                new_msg["consentRequired"] = True
+        # Options for SAML clients
+        elif msg["protocol"] == "saml":
+            new_msg = json.loads(jsonSamlTemplate)
+            new_msg["protocol"] = msg.pop("protocol")
+            if "saml_consent" in keycloak_config:
+                new_msg["consentRequired"] = keycloak_config["saml_consent"]
+            else:
+                new_msg["consentRequired"] = True
+            if "metadata_url" in msg:
+                new_msg["attributes"]["saml.metadata.url"] = msg.pop("metadata_url")
+            if "entity_id" in msg:
+                new_msg["clientId"] = msg.pop("entity_id")
+            if "requested_attributes" in msg:
+                client_default_client_scopes, new_msg["protocolMappers"] = add_saml_scopes_and_mappers(msg["requested_attributes"])
+                new_msg["defaultClientScopes"] = list(set(client_default_client_scopes + realm_default_client_scopes))
+    # Options for any type of client
     emails = []
     if "service_name" in msg:
         new_msg["name"] = msg.pop("service_name")
@@ -56,77 +133,24 @@ def format_keycloak_msg(msg, realm_default_client_scopes):
         # Remove duplicate entries
         emails = list(set(emails))
         new_msg["attributes"]["contacts"] = ",".join(emails)
-    if "client_id" in msg and msg["client_id"]:
-        new_msg["clientId"] = msg.pop("client_id")
-    if "redirect_uris" in msg:
-        new_msg["redirectUris"] = msg.pop("redirect_uris")
-    if "scope" in msg:
-        new_msg["optionalClientScopes"] = msg.pop("scope")
-        if "openid" in new_msg["optionalClientScopes"]:
-            new_msg["optionalClientScopes"].remove("openid")
-    if "grant_types" in msg:
-        for grant_type in msg["grant_types"]:
-            if grant_type == "authorization_code":
-                new_msg["standardFlowEnabled"] = True
-            if grant_type == "client_credentials":
-                new_msg["serviceAccountsEnabled"] = True
-            if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
-                new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
-            if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
-                new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
-            if grant_type == "implicit":
-                new_msg["implicitFlowEnabled"] = True
-    if "token_endpoint_auth_method" in msg:
-        if msg["token_endpoint_auth_method"] == "none":
-            new_msg["publicClient"] = True
-        new_msg["clientAuthenticatorType"] = map_token_endpoint_value(msg.pop("token_endpoint_auth_method"))
-    if "client_secret" in msg:
-        new_msg["secret"] = msg.pop("client_secret")
-    if "token_endpoint_auth_signing_alg" in msg:
-        new_msg["attributes"]["token.endpoint.auth.signing.alg"] = msg.pop("token_endpoint_auth_signing_alg")
-    if "jwks" in msg:
-        new_msg["attributes"]["use.jwks.string"] = "true"
-        new_msg["attributes"]["jwks.string"] = json.dumps(msg.pop("jwks"))
-    if "jwks_uri" in msg:
-        new_msg["attributes"]["use.jwks.url"] = True
-        new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
-    if "refresh_token_validity_seconds" in msg:
-        new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
-        if "reuse_refresh_token" in msg:
-            rotate_refresh_token = str(not msg.pop("reuse_refresh_token"))
-            new_msg["attributes"]["revoke.refresh.token"] = rotate_refresh_token.lower()
-    if "code_challenge_method" in msg:
-        new_msg["attributes"]["pkce.code.challenge.method"] = msg.pop("code_challenge_method")
-    if "access_token_validity_seconds" in msg:
-        if msg["access_token_validity_seconds"] < 60:
-            new_msg["attributes"]["access.token.lifespan"] = "60"
-        else:
-            new_msg["attributes"]["access.token.lifespan"] = str(msg.pop("access_token_validity_seconds"))
-    if "id_token_timeout_seconds" in msg:
-        new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
-    if "device_code_validity_seconds" in msg:
-        new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
-    if new_msg["standardFlowEnabled"] == True or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True:
-        new_msg["consentRequired"] = True
+
     return new_msg
 
 
 # This function will gain an access token from the provided issuer and it will
-# make a POST request using KeycloakOidcClientApi to update or create the client
-#    Function update_data gets 4 arguments:
+# make a POST request using KeycloakClientApi to update or create the client
+#    Function process_data gets 4 arguments:
 #    - messages, the new incoming messages in json
-#    - auth_server, the url of the AuthZ Server
-#    - realm, the name of the realm
 #    - access_token
-#    - deployer_name
-def update_data(messages, access_token, keycloak_config):
+#    - keycloak_config, configuration file for Keycloak
+def process_data(messages, access_token, keycloak_config):
     auth_server = keycloak_config["auth_server"]
     realm = keycloak_config["realm"]
     deployer_name = ""
     # messages to be published
     pub_messages = []
     # Create Keycloak agent
-    keycloak_agent = KeycloakOidcClientApi(auth_server, realm, access_token)
+    keycloak_agent = KeycloakClientApi(auth_server, realm, access_token)
     for msg in messages:
         log.debug("Message from ams: " + str(msg))
         # Remove rciam service id to make request to Keycloak
@@ -134,7 +158,7 @@ def update_data(messages, access_token, keycloak_config):
         external_id = ""
         client_id = ""
         try:
-            response, external_id, client_id = call_keycloak(msg, keycloak_agent, keycloak_config)
+            response, external_id, client_id = deploy_to_keycloak(msg, keycloak_agent, keycloak_config)
             log.info("Message received from Keycloak: " + str(response))
             ams_message = create_ams_response(response, service_id, deployer_name, external_id, client_id)
         except:
@@ -174,7 +198,7 @@ def create_client_scopes(agent, client_uuid, client_config):
             new_optional_client_scopes.remove(scope)
         else:
             # Create custom scope
-            agent.create_realm_client_scopes(scope)
+            agent.create_realm_oidc_client_scopes(scope)
 
     # Get updated client scopes
     realm_client_scopes = agent.sync_realm_client_scopes()
@@ -182,35 +206,61 @@ def create_client_scopes(agent, client_uuid, client_config):
     for add_scope in create_client_scopes:
         agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
 
-# Update the optional client scopes of the client
+# Update the client scopes of the client
 def update_client_scopes(agent, client_uuid, new_client_config, current_client_config):
+    protocol = current_client_config["protocol"]
+    if protocol == "saml":
+        key = "defaultClientScopes"
+    else:
+        key = "optionalClientScopes"
     realm_client_scopes = agent.sync_realm_client_scopes()
-    current_optional_client_scopes = current_client_config["optionalClientScopes"]
-    new_optional_client_scopes = new_client_config["optionalClientScopes"]
+    current_client_scopes = current_client_config[key]
+    new_client_scopes = new_client_config[key]
 
-    # Custom scopes that are not created in Keycloak
-    create_client_scopes = list(set(new_optional_client_scopes) - set(realm_client_scopes.keys()))
-    parametric_scope_delimiter = "?value="
-    for scope in create_client_scopes:
-        if parametric_scope_delimiter in scope:
-            # Ignore parametric scopes
-            log.info("The scope '" + scope + "' will be ignored.")
-            new_optional_client_scopes.remove(scope)
-        else:
-            # Create custom scope
-            agent.create_realm_client_scopes(scope)
+    if protocol == "openid-connect":
+        # Custom scopes that are not created in Keycloak
+        create_client_scopes = list(set(new_client_scopes) - set(realm_client_scopes.keys()))
+        parametric_scope_delimiter = "?value="
+        for scope in create_client_scopes:
+            if parametric_scope_delimiter in scope:
+                # Ignore parametric scopes
+                log.info("The scope '" + scope + "' will be ignored.")
+                new_client_scopes.remove(scope)
+            else:
+                # Create custom scope
+                agent.create_realm_oidc_client_scopes(scope)
 
-    # Get updated client scopes
-    realm_client_scopes = agent.sync_realm_client_scopes()
+        # Get updated client scopes
+        realm_client_scopes = agent.sync_realm_client_scopes()
 
-    remove_client_scopes = list(set(current_optional_client_scopes) - set(new_optional_client_scopes))
-    add_client_scopes = list(set(new_optional_client_scopes) - set(current_optional_client_scopes))
+    remove_client_scopes = list(set(current_client_scopes) - set(new_client_scopes))
+    add_client_scopes = list(set(new_client_scopes) - set(current_client_scopes))
 
     for remove_scope in remove_client_scopes:
-        agent.remove_client_scope_by_id(client_uuid, realm_client_scopes[remove_scope])
+        agent.remove_client_scope_by_id(client_uuid, realm_client_scopes[remove_scope], protocol)
 
     for add_scope in add_client_scopes:
-        agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
+        agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope], protocol)
+
+def add_saml_scopes_and_mappers(requested_attributes):
+    scopes = []
+    mappers = []
+    for attribute in requested_attributes:
+        scopes.append(attribute["friendly_name"])
+        if attribute["type"] == "custom":
+            mapper_object = {
+                "name": attribute["friendly_name"],
+                "protocol": "saml",
+                "protocolMapper": "saml-user-attribute-mapper",
+                "config": {
+                    "attribute.nameformat": "URI Reference",
+                    "user.attribute": attribute["friendly_name"],
+                    "friendly.name": attribute["friendly_name"],
+                    "attribute.name": attribute["name"]
+                }
+            }
+            mappers.append(mapper_object)
+    return scopes, mappers
 
 
 # Update the optional client scopes of the client
@@ -224,14 +274,17 @@ def update_service_account(agent, client_uuid, current_client_config, keycloak_c
 # - create
 # - delete
 # - edit
-def call_keycloak(registry_message, keycloak_agent, keycloak_config):
+def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
     deployment_type = registry_message.pop("deployment_type")
-    realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes()
+    protocol = registry_message["protocol"]
+    if protocol == "oidc":
+        protocol = "openid-connect"
     default_client_scopes = []
-    for scope in realm_default_client_scopes["response"]:
+    realm_default_client_scopes = keycloak_agent.get_realm_default_client_scopes(protocol)
+    for scope in realm_default_client_scopes:
         default_client_scopes.append(scope["name"])
-    keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
-    log.debug("Formated message for Keycloak: " + str(keycloak_msg))
+    keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes, keycloak_config)
+    log.debug("Formatted message for Keycloak: " + str(keycloak_msg))
     response = {}
     external_id = ""
     client_id = ""
@@ -245,13 +298,14 @@ def call_keycloak(registry_message, keycloak_agent, keycloak_config):
             else:
                 response_external_id = keycloak_agent.get_client_by_id(client_id)
                 external_id = response_external_id["response"]["id"]
-        create_client_scopes(keycloak_agent, external_id, keycloak_msg)
-        if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
-            keycloak_agent.update_client_authz_permissions(external_id, "enable")
-        if response["response"]["serviceAccountsEnabled"]:
-            update_service_account(
-                keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
-            )
+        if protocol == "openid-connect":
+            create_client_scopes(keycloak_agent, external_id, keycloak_msg)
+            if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
+                keycloak_agent.update_client_authz_permissions(external_id, "enable")
+            if response["response"]["serviceAccountsEnabled"]:
+                update_service_account(
+                    keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
+                )
     elif deployment_type == "delete":
         client_id = keycloak_msg["clientId"]
         external_id = registry_message["external_id"]
@@ -262,22 +316,25 @@ def call_keycloak(registry_message, keycloak_agent, keycloak_config):
         log.info("Update client with id: " + str(client_id))
         response = keycloak_agent.update_client(client_id, keycloak_msg)
         external_id = response["response"]["id"]
-        update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
-        if response["response"]["serviceAccountsEnabled"]:
-            update_service_account(
-                keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
-            )
-        client_authz_permissions_response = keycloak_agent.get_client_authz_permissions(external_id)
-        if (
-            client_authz_permissions_response["response"]["enabled"] == False
-            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True
-        ):
-            keycloak_agent.update_client_authz_permissions(external_id, "enable")
-        elif (
-            client_authz_permissions_response["response"]["enabled"] == True
-            and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == False
-        ):
-            keycloak_agent.update_client_authz_permissions(external_id, "disable")
+        if protocol == "openid-connect":
+            update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
+            if response["response"]["serviceAccountsEnabled"]:
+                update_service_account(
+                    keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
+                )
+            client_authz_permissions_response = keycloak_agent.get_client_authz_permissions(external_id)
+            if (
+                client_authz_permissions_response["response"]["enabled"] == False
+                and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True
+            ):
+                keycloak_agent.update_client_authz_permissions(external_id, "enable")
+            elif (
+                client_authz_permissions_response["response"]["enabled"] == True
+                and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == False
+            ):
+                keycloak_agent.update_client_authz_permissions(external_id, "disable")
+        if protocol == "saml":
+            update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
     return response, external_id, client_id
 
 
@@ -320,7 +377,7 @@ if __name__ == "__main__":
                     config["keycloak"]["client_secret"],
                 )
             ams.ack(ids)
-            responses = update_data(messages, access_token, config["keycloak"])
+            responses = process_data(messages, access_token, config["keycloak"])
             publish_ams(responses, ams)
         time.sleep(config["keycloak"]["ams"]["poll_interval"])
     log.info("Exit script")
