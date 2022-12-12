@@ -149,10 +149,6 @@ class TestDeployerKeycloak(unittest.TestCase):
             "response": "OK",
             "status": 200,
         }
-        realm_default_client_scopes = {
-            "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope5", "name": "example", "protocol": "openid-connect"}],
-            "status": 200,
-        }
 
         mock = MagicMock()
         mock.delete_client = MagicMock(return_value=out_service)
