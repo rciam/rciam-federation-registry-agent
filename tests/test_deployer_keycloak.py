@@ -114,10 +114,9 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        realm_default_client_scopes = {
-            "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope3", "name": "example", "protocol": "openid-connect"}],
-            "status": 201,
-        }
+        realm_default_client_scopes = [
+            {"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope3", "name": "example", "protocol": "openid-connect"}
+        ]
 
         mock = MagicMock()
         mock.create_client = MagicMock(return_value=out_service)
@@ -202,10 +201,10 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 200,
         }
-        realm_default_client_scopes = {
-            "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope7", "name": "example", "protocol": "openid-connect"}],
-            "status": 200,
-        }
+        realm_default_client_scopes = [
+            {"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope7", "name": "example", "protocol": "openid-connect"}
+        ]
+
         client_authz_permissions = {
             "response": {"enabled": False},
             "status": 200,
@@ -419,18 +418,14 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        # realm_default_client_scopes = {
-        #     "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope4", "name": "example", "protocol": "saml"}],
-        #     "status": 201,
-        # }
+        realm_default_client_scopes = [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope4", "name": "example", "protocol": "saml"}]
 
         mock = MagicMock()
         mock.create_client = MagicMock(return_value=out_service)
         mock.get_client_by_id = MagicMock(return_value=out_service)
-        # mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
         func_result = deployer_keycloak_saml.deploy_to_keycloak(new_service, mock, "config")
-        # self.assertEqual(func_result, ({"status": 200}, "a1a2a3a4-b5b6-c7c8-d9d0-testSamlId", "testSamlId"))
         self.assertEqual(
             func_result, (out_service, "a1a2a3a4-b5b6-c7c8-d9d0-testSamlId", "https://example.org/testSamlId")
         )
@@ -547,14 +542,11 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        # realm_default_client_scopes = {
-        #     "response": [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope8", "name": "example", "protocol": "saml"}],
-        #     "status": 200,
-        # }
+        realm_default_client_scopes = [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope8", "name": "example", "protocol": "saml"}]
 
         mock = MagicMock()
         mock.update_client = MagicMock(return_value=out_service)
-        # mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
+        mock.get_realm_default_client_scopes = MagicMock(return_value=realm_default_client_scopes)
 
         func_result = deployer_keycloak_saml.deploy_to_keycloak(new_service, mock, "config")
         self.assertEqual(
