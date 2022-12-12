@@ -276,7 +276,7 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
     for scope in realm_default_client_scopes:
         default_client_scopes.append(scope["name"])
     keycloak_msg = format_keycloak_msg(registry_message, default_client_scopes)
-    log.debug("Formated message for Keycloak: " + str(keycloak_msg))
+    log.debug("Formatted message for Keycloak: " + str(keycloak_msg))
     response = {}
     external_id = ""
     client_id = ""
