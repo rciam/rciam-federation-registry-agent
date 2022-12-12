@@ -60,7 +60,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "webOrigins": ["+"],
         }
 
-        func_result = deployer_keycloak_oidc.format_keycloak_msg(new_service, ["example"])
+        func_result = deployer_keycloak_oidc.format_keycloak_msg(new_service, ["example"], {})
         self.assertEqual(func_result, out_service)
 
     # Test calling Keycloak to create a new entry
@@ -349,7 +349,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             ],
         }
 
-        func_result = deployer_keycloak_saml.format_keycloak_msg(new_message, ["example"])
+        func_result = deployer_keycloak_saml.format_keycloak_msg(new_message, ["example"], {})
         self.assertEqual(func_result, out_message)
 
     # Test calling Keycloak to create a new entry
