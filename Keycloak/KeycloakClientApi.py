@@ -1,4 +1,5 @@
 import requests, json
+from urllib.parse import quote
 
 """
 Manages all clients on Keycloak
@@ -6,7 +7,7 @@ Manages all clients on Keycloak
 """
 
 
-class KeycloakOidcClientApi:
+class KeycloakClientApi:
 
     """
     Class constructor
@@ -34,7 +35,7 @@ class KeycloakOidcClientApi:
     """
 
     def get_client_by_id(self, client_id):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
         header = {"Authorization": "Bearer " + self.token}
 
         return self.http_request("GET", url, header)
@@ -70,7 +71,7 @@ class KeycloakOidcClientApi:
     """
 
     def update_client(self, client_id, client_object):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
         header = {
             "Authorization": "Bearer " + self.token,
             "Content-Type": "application/json",
@@ -89,7 +90,7 @@ class KeycloakOidcClientApi:
     """
 
     def delete_client(self, client_id):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + str(client_id)
+        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
         header = {"Authorization": "Bearer " + self.token}
 
         return self.http_request("DELETE", url, header)
@@ -139,11 +140,18 @@ class KeycloakOidcClientApi:
         response (JSON Object): A registered client in JSON format
     """
 
-    def get_realm_default_client_scopes(self):
+    def get_realm_default_client_scopes(self, protocol):
         url = self.auth_url + "/admin/realms/" + self.realm + "/default-default-client-scopes"
         header = {"Authorization": "Bearer " + self.token}
 
-        return self.http_request("GET", url, header)
+        response = self.http_request("GET", url, header)
+
+        default_client_scopes = []
+        for client_scope in response["response"]:
+            if client_scope["protocol"] == protocol:
+                default_client_scopes.append(client_scope)
+
+        return default_client_scopes
 
     """
     Sync realm client scopes
@@ -164,13 +172,10 @@ class KeycloakOidcClientApi:
         return scope_list
 
     """
-    Create realm client scope
-    
-    Returns:
-        response (JSON Object): A registered client in JSON format
+    Create realm OIDC client scope
     """
 
-    def create_realm_client_scopes(self, scope_name):
+    def create_realm_oidc_client_scopes(self, scope_name):
         url = self.auth_url + "/admin/realms/" + self.realm + "/client-scopes"
         header = {"Authorization": "Bearer " + self.token}
         client_scope_object = {
@@ -186,37 +191,42 @@ class KeycloakOidcClientApi:
         self.http_request("POST", url, header, client_scope_object)
 
     """
-    Add client scope to the optional client scopes list of the client
-    
-    Returns:
-        response (JSON Object): A registered client in JSON format
+    Add client scope to the default or optional client scopes list of the client
     """
 
-    def add_client_scope_by_id(self, keycloak_id, client_scope_id):
+    def add_client_scope_by_id(self, keycloak_id, client_scope_id, protocol):
+        if protocol == "saml":
+            client_scopes_path = "/default-client-scopes/"
+        else:
+            client_scopes_path = "/optional-client-scopes/"
         url = (
             self.auth_url
             + "/admin/realms/"
             + self.realm
             + "/clients/"
             + keycloak_id
-            + "/optional-client-scopes/"
+            + client_scopes_path
             + client_scope_id
         )
         header = {"Authorization": "Bearer " + self.token}
         self.http_request("PUT", url, header)
 
     """
-    Remove client scope to the optional client scopes list of the client
+    Remove client scope from the default or optional client scopes list of the client
     """
 
-    def remove_client_scope_by_id(self, keycloak_id, client_scope_id):
+    def remove_client_scope_by_id(self, keycloak_id, client_scope_id, protocol="openid-connect"):
+        if protocol == "saml":
+            client_scopes_path = "/default-client-scopes/"
+        else:
+            client_scopes_path = "/optional-client-scopes/"
         url = (
             self.auth_url
             + "/admin/realms/"
             + self.realm
             + "/clients/"
             + keycloak_id
-            + "/optional-client-scopes/"
+            + client_scopes_path
             + client_scope_id
         )
         header = {"Authorization": "Bearer " + self.token}
