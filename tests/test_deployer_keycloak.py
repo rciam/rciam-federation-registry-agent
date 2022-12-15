@@ -51,6 +51,7 @@ class TestDeployerKeycloak(unittest.TestCase):
             "consentRequired": False,
             "defaultClientScopes": ["example"],
             "description": "testDescription",
+            "directAccessGrantsEnabled": False,
             "implicitFlowEnabled": False,
             "name": "testName",
             "protocol": "openid-connect",
