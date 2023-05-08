@@ -133,14 +133,14 @@ with open('config.json') as json_data_file:
 
 Use Keycloak as an API manager to communicate with Keycloak
 
-- First obtain an access token and create the Keycloak API Client (find clientCredentialsGrant under `Utils` directory)
+- First obtain an access token and create the Keycloak API Client (find client_credentials_grant under `Utils` directory)
 
 ```python
-  access_token = clientCredentialsGrant(issuer_url, client_id, client_secret)
+  access_token = client_credentials_grant(issuer_url, client_id, client_secret)
   keycloak_agent = KeycloakClientApi(issuer_url, access_token)
 ```
 
-- Use the following functions to create, delete and update a service on clientCredentialsGrant
+- Use the following functions to create, delete and update a service on client_credentials_grant
 
 ```python
   response = keycloak_agent.create_client(keycloak_msg)
@@ -152,10 +152,10 @@ Use Keycloak as an API manager to communicate with Keycloak
 
 Use MITREid Connect as an API manager to communicate with MITREid
 
-- First obtain an access token and create the MITREid API Client (find refreshTokenGrant under `Utils` directory)
+- First obtain an access token and create the MITREid API Client (find refresh_token_grant under `Utils` directory)
 
 ```python
-  access_token = refreshTokenGrant(issuer_url, refresh_token, client_id, client_secret)
+  access_token = refresh_token_grant(issuer_url, refresh_token, client_id, client_secret)
   mitreid_agent = mitreidClientApi(issuer_url, access_token)
 ```
 
