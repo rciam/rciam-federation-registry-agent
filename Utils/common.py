@@ -1,5 +1,5 @@
-import logging.config
 import logging
+import logging.config
 
 
 def get_log_conf(log_config_file=None):
@@ -15,25 +15,25 @@ def get_log_conf(log_config_file=None):
 # create_ams_response creates a json object with the result of the mitreId api call
 # that is readable from the rciam-federation-registry
 def create_ams_response(response, service_id, deployer_name, external_id, client_id):
-    msgNew = {}
-    msgNew["id"] = service_id
-    msgNew["status_code"] = response["status"]
+    new_msg = {}
+    new_msg["id"] = service_id
+    new_msg["status_code"] = response["status"]
     if len(deployer_name) > 0:
-        msgNew["deployer_name"] = deployer_name
+        new_msg["deployer_name"] = deployer_name
 
     if len(external_id) > 0:
-        msgNew["external_id"] = external_id
+        new_msg["external_id"] = external_id
 
     if len(client_id) > 0:
-        msgNew["client_id"] = client_id
+        new_msg["client_id"] = client_id
 
     if response["status"] != 200 and response["status"] != 201 and response["status"] != 204:
-        msgNew["error_description"] = response["error"]
-        msgNew["state"] = "error"
+        new_msg["error_description"] = response["error"]
+        new_msg["state"] = "error"
     else:
-        msgNew["state"] = "deployed"
+        new_msg["state"] = "deployed"
 
-    return msgNew
+    return new_msg
 
 
 """

@@ -1,20 +1,23 @@
 #!/usr/bin/env python3
 
-import json
-import time
 import argparse
+import json
 import logging
-from Utils.common import get_log_conf, create_ams_response, get_keycloak_issuer
-from ServiceRegistryAms.PullPublish import PullPublish
+import time
+
 from Keycloak.KeycloakClientApi import KeycloakClientApi
-from Utils.oauth import clientCredentialsGrant, refreshTokenGrant
+from ServiceRegistryAms.PullPublish import PullPublish
+from Utils.common import create_ams_response, get_keycloak_issuer, get_log_conf
+from Utils.oauth import client_credentials_grant, refresh_token_grant
 
 # Setup logger
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
 jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"directAccessGrantsEnabled":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
-jsonSamlTemplate = '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"}}'
+jsonSamlTemplate = (
+    '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"}}'
+)
 
 
 def map_token_endpoint_value(key):
@@ -78,7 +81,9 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
                 new_msg["attributes"]["use.jwks.url"] = True
                 new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
             if "refresh_token_validity_seconds" in msg:
-                new_msg["attributes"]["client.offline.session.idle.timeout"] = str(msg["refresh_token_validity_seconds"])
+                new_msg["attributes"]["client.offline.session.idle.timeout"] = str(
+                    msg["refresh_token_validity_seconds"]
+                )
                 if "reuse_refresh_token" in msg:
                     rotate_refresh_token = str(not msg.pop("reuse_refresh_token"))
                     new_msg["attributes"]["revoke.refresh.token"] = rotate_refresh_token.lower()
@@ -93,7 +98,10 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
                 new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
             if "device_code_validity_seconds" in msg:
                 new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
-            if new_msg["standardFlowEnabled"] == True or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True:
+            if (
+                new_msg["standardFlowEnabled"] == True
+                or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True
+            ):
                 new_msg["consentRequired"] = True
         # Options for SAML clients
         elif msg["protocol"] == "saml":
@@ -108,8 +116,12 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
             if "entity_id" in msg:
                 new_msg["clientId"] = msg.pop("entity_id")
             if "requested_attributes" in msg:
-                client_default_client_scopes, new_msg["protocolMappers"] = add_saml_scopes_and_mappers(msg["requested_attributes"])
-                new_msg["defaultClientScopes"] = list(sorted(set(client_default_client_scopes + realm_default_client_scopes)))
+                client_default_client_scopes, new_msg["protocolMappers"] = add_saml_scopes_and_mappers(
+                    msg["requested_attributes"]
+                )
+                new_msg["defaultClientScopes"] = list(
+                    sorted(set(client_default_client_scopes + realm_default_client_scopes))
+                )
     # Options for any type of client
     emails = []
     if "service_name" in msg:
@@ -183,6 +195,7 @@ def publish_ams(pub_messages, ams_agent):
         log.debug("Messages published to ams: " + str(pub_messages))
         ams_agent.publish(pub_messages)
 
+
 # Create the optional client scopes of the client
 def create_client_scopes(agent, client_uuid, client_config):
     realm_client_scopes = agent.sync_realm_client_scopes()
@@ -205,6 +218,7 @@ def create_client_scopes(agent, client_uuid, client_config):
 
     for add_scope in create_client_scopes:
         agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope])
+
 
 # Update the client scopes of the client
 def update_client_scopes(agent, client_uuid, new_client_config, current_client_config):
@@ -242,6 +256,7 @@ def update_client_scopes(agent, client_uuid, new_client_config, current_client_c
     for add_scope in add_client_scopes:
         agent.add_client_scope_by_id(client_uuid, realm_client_scopes[add_scope], protocol)
 
+
 def add_saml_scopes_and_mappers(requested_attributes):
     scopes = []
     mappers = []
@@ -256,8 +271,8 @@ def add_saml_scopes_and_mappers(requested_attributes):
                     "attribute.nameformat": "URI Reference",
                     "user.attribute": attribute["friendly_name"],
                     "friendly.name": attribute["friendly_name"],
-                    "attribute.name": attribute["name"]
-                }
+                    "attribute.name": attribute["name"],
+                },
             }
             mappers.append(mapper_object)
     return scopes, mappers
@@ -364,14 +379,14 @@ if __name__ == "__main__":
         if len(messages) > 0:
             log.info("Get access token from " + config["keycloak"]["auth_server"])
             if "refresh_token" in config["keycloak"]:
-                access_token = refreshTokenGrant(
+                access_token = refresh_token_grant(
                     get_keycloak_issuer(config["keycloak"]),
                     config["keycloak"]["refresh_token"],
                     config["keycloak"]["client_id"],
                     config["keycloak"]["client_secret"],
                 )
             else:
-                access_token = clientCredentialsGrant(
+                access_token = client_credentials_grant(
                     get_keycloak_issuer(config["keycloak"]),
                     config["keycloak"]["client_id"],
                     config["keycloak"]["client_secret"],
