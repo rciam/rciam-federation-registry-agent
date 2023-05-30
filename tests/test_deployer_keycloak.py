@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
-import unittest
-import types
-import os
 import importlib.machinery
-from unittest.mock import MagicMock, Mock
+import os
+import types
+import unittest
+from unittest.mock import MagicMock
 
 
 def get_resource_path(relative_path):
@@ -21,7 +21,6 @@ loader.exec_module(deployer_keycloak_saml)
 
 
 class TestDeployerKeycloak(unittest.TestCase):
-
     # Test the format is compatible with Keycloak
     def test_oidc_format_keycloak_msg(self):
         new_service = {
@@ -98,10 +97,6 @@ class TestDeployerKeycloak(unittest.TestCase):
                 },
                 "consentRequired": False,
                 "optionalClientScopes": ["profile", "email"],
-                "implicitFlowEnabled": "false",
-                "publicClient": "false",
-                "serviceAccountsEnabled": "false",
-                "standardFlowEnabled": "false",
                 "clientId": "testOidcId",
                 "defaultClientScopes": ["example"],
                 "description": "testDescription",
@@ -184,10 +179,6 @@ class TestDeployerKeycloak(unittest.TestCase):
                     "use.refresh.tokens": "false",
                 },
                 "consentRequired": False,
-                "implicitFlowEnabled": "false",
-                "publicClient": "false",
-                "serviceAccountsEnabled": "false",
-                "standardFlowEnabled": "false",
                 "clientId": "testOidcId",
                 "description": "testDescription",
                 "id": "a1a2a3a4-b5b6-c7c8-d9d0-testOidcId",
@@ -419,7 +410,9 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        realm_default_client_scopes = [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope4", "name": "example", "protocol": "saml"}]
+        realm_default_client_scopes = [
+            {"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope4", "name": "example", "protocol": "saml"}
+        ]
 
         mock = MagicMock()
         mock.create_client = MagicMock(return_value=out_service)
@@ -543,7 +536,9 @@ class TestDeployerKeycloak(unittest.TestCase):
             },
             "status": 201,
         }
-        realm_default_client_scopes = [{"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope8", "name": "example", "protocol": "saml"}]
+        realm_default_client_scopes = [
+            {"id": "a1a2a3a4-b5b6-c7c8-d9d0-testScope8", "name": "example", "protocol": "saml"}
+        ]
 
         mock = MagicMock()
         mock.update_client = MagicMock(return_value=out_service)

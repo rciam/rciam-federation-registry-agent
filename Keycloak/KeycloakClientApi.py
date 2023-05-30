@@ -1,5 +1,6 @@
-import requests, json
 from urllib.parse import quote
+
+import requests
 
 """
 Manages all clients on Keycloak
@@ -35,7 +36,9 @@ class KeycloakClientApi:
     """
 
     def get_client_by_id(self, client_id):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
+        url = (
+            self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
+        )
         header = {"Authorization": "Bearer " + self.token}
 
         return self.http_request("GET", url, header)
@@ -71,7 +74,9 @@ class KeycloakClientApi:
     """
 
     def update_client(self, client_id, client_object):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
+        url = (
+            self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
+        )
         header = {
             "Authorization": "Bearer " + self.token,
             "Content-Type": "application/json",
@@ -90,7 +95,9 @@ class KeycloakClientApi:
     """
 
     def delete_client(self, client_id):
-        url = self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
+        url = (
+            self.auth_url + "/realms/" + self.realm + "/clients-registrations/default/" + quote(str(client_id), safe="")
+        )
         header = {"Authorization": "Bearer " + self.token}
 
         return self.http_request("DELETE", url, header)
@@ -127,7 +134,7 @@ class KeycloakClientApi:
         header = {"Authorization": "Bearer " + self.token}
         if action == "enable":
             enabled = True
-        elif action == "disable":
+        else:
             enabled = False
         client_object = {"enabled": enabled}
 
@@ -294,17 +301,39 @@ class KeycloakClientApi:
             response = requests.request(method, url, headers=header, json=data)
             response.raise_for_status()
         except requests.exceptions.HTTPError as errh:
-            print("Http Error: %s with error: %s" % (url, repr(errh)))
-            return {"status": response.status_code, "error": repr(errh)}
+            print("HTTP Error: %s with error: HTTP %s and response: %s" % (url, response.status_code, response.json()))
+            return {
+                "status": response.status_code,
+                "error": repr(errh),
+                "response": response.json(),
+            }
         except requests.exceptions.ConnectionError as errc:
-            print("Error Connecting: %s with error: %s" % (url, repr(errc)))
-            return {"status": response.status_code, "error": repr(errc)}
+            print(
+                "Connection Error: %s with error: HTTP  %s and response: %s"
+                % (url, response.status_code, response.text)
+            )
+            return {
+                "status": response.status_code,
+                "error": repr(errc),
+                "response": response.json(),
+            }
         except requests.exceptions.Timeout as errt:
-            print("Timeout Error: %s with error: %s" % (url, repr(errt)))
-            return {"status": response.status_code, "error": repr(errt)}
+            print("Timeout Error: %s with error: HTTP %s and response: %s" % (url, response.status_code, response.text))
+            return {
+                "status": response.status_code,
+                "error": repr(errt),
+                "response": response.json(),
+            }
         except requests.exceptions.RequestException as err:
-            print("Failed to make request to %s with error: %s" % (url, err))
-            return {"status": response.status_code, "error": repr(err)}
+            print(
+                "Failed to make request to %s with error: HTTP  %s and response: %s"
+                % (url, response.status_code, response.text)
+            )
+            return {
+                "status": response.status_code,
+                "error": repr(err),
+                "response": response.json(),
+            }
 
         if method == "DELETE" or response.status_code == 204 or not response.text:
             return {"status": response.status_code, "response": "OK"}

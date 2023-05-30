@@ -1,12 +1,15 @@
 #!/usr/bin/env python3
 
-import json, time
-import subprocess
 import argparse
-import requests
+import json
 import logging
-from Utils.common import get_log_conf, create_ams_response
+import subprocess
+import time
+
+import requests
+
 from ServiceRegistryAms.PullPublish import PullPublish
+from Utils.common import create_ams_response, get_log_conf
 
 log = logging.getLogger(__name__)
 
