@@ -1,2 +1,2 @@
-argo-ams-library==0.5.4
+argo-ams-library===0.5.9
 inquirer==2.9.2
