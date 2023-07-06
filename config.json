@@ -1,0 +1,7 @@
+{
+    "federation_tenants": ["tenant_name"],
+    "federation_devel_instances": ["dev","local"],
+    "federation_production_instances": ["prod", "demo"],
+    "federation_key": "placeholder",
+    "ams_auth_key": "placeholder"
+}
