@@ -1,0 +1,14 @@
+{
+  "devel": {
+    "host": "devel_instance_url",
+    "project" : "project",
+    "token" : "token",
+    "pub_topic": "_deployment_response"
+    },
+  "production": {
+    "host": "production_instance_url",
+    "project" : "project",
+    "token" : "token",
+    "pub_topic": "_deployment_response"
+  }
+}
