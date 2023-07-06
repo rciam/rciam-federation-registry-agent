@@ -1,89 +1,56 @@
 {
-    "egi": 
+    "tenant1-name": 
         [ 
             {
-                "topic": "_egi_service_mitreid_development",
-                "integration_environment": "development",
+                "topic": "_tenant1-name_{entity_type}_{type}_{integration_environment}",
+                "integration_environment": "{integration_environment}",
                 "protocol":"oidc",
-                "subs": ["_egi_service_oidc_mitreid_developent_1"]
+                "subs": ["_tenant1-name_{entity_type}_{type}_{integration_environment}_deployer"]
             },
             {
-                "topic": "_egi_service_mitreid_production",
+                "topic": "_tenant1-name_service_keycloak_production",
                 "integration_environment": "production",
                 "protocol":"oidc",
-                "subs": ["_egi_service_oidc_mitreid_production_2"]
+                "subs": ["_tenant1-name_service_keycloak_production_deployer"]
             },
             {
-                "topic": "_egi_service_mitreid_demo",
+                "topic": "_tenant1-name_service_keycloak_demo",
                 "integration_environment": "demo",
                 "protocol":"oidc",
-                "subs": ["_egi_service_oidc_mitreid_demo_3"]
+                "subs": ["_tenant1-name_service_keycloak_demo_deployer"]
             },
             {
-                "topic": "_egi_service_ssp_development",
+                "topic": "_tenant1-name_service_ssp_development",
                 "integration_environment": "development",
                 "protocol":"saml",
-                "subs": ["_egi_service_saml_ssp_development_4"]
+                "subs": ["_tenant1-name_service_ssp_development_deployer"]
             },
             {
-                "topic": "_egi_service_ssp_production",
+                "topic": "_tenant1-name_service_ssp_production",
                 "integration_environment": "production",
                 "protocol":"saml",
-                "subs": ["_egi_service_saml_ssp_production_5","_egi_service_saml_ssp_production_6"]
+                "subs": ["_tenant1-name_service_ssp_production_deployer_1","_tenant1-name_service_ssp_production_deployer_2"]
             },
             {
-                "topic": "_egi_service_ssp_demo",
+                "topic": "_tenant1-name_service_ssp_demo",
                 "integration_environment": "demo",
                 "protocol":"saml",
-                "subs": ["_egi_service_saml_ssp_demo_7","_egi_service_saml_ssp_demo_8"]
+                "subs": ["_tenant1-name_service_ssp_demo_deployer_1","_tenant1-name_service_ssp_demo_deployer_2"]
             }
         ],
-    "eosc":
+    "tenant2-name":
         [
             {
-                "topic": "_eosc_service_mitreid_development",
-                "integration_environment": "development",
-                "protocol":"oidc",
-                "subs": ["_eosc_service_oidc_mitreid_developent_9"]
-            },
-            {
-                "topic": "_eosc_service_mitreid_production",
-                "integration_environment": "production",
-                "protocol":"oidc",
-                "subs": ["_eosc_service_oidc_mitreid_production_10"]
-            },
-            {
-                "topic": "_eosc_service_mitreid_demo",
-                "integration_environment": "demo",
-                "protocol":"oidc",
-                "subs": ["_eosc_service_oidc_mitreid_demo_11"]
-            },
-            {
-                "topic": "_eosc_service_ssp_development",
-                "integration_environment": "development",
-                "protocol":"saml",
-                "subs": ["_eosc_service_saml_ssp_development_12"]
-            },
-            {
-                "topic": "_eosc_service_ssp_production",
+                "topic": "_tenant2-name_service_keycloak_production",
                 "integration_environment": "production",
                 "protocol":"saml",
-                "subs": ["_eosc_service_saml_ssp_production_13"]
+                "subs":["_tenant2-name_service_keycloak_production_deployer"]
             },
             {
-                "topic": "_eosc_service_ssp_demo",
-                "integration_environment": "demo",
-                "protocol":"saml",
-                "subs": ["_eosc_service_saml_ssp_demo_14"]
-            }
-        ],
-    "grnet":
-        [
-            {
-                "topic": "_grnet_service_satosa_development",
-                "integration_environment": "development",
-                "protocol":"saml",
-                "subs":["_grnet_service_saml_satosa_development_15"]
+                "topic": "_tenant2-name_service_keycloak_production",
+                "integration_environment": "production",
+                "protocol":"oidc",
+                "subs":["_tenant2-name_service_keycloak_production_deployer"]
             }
         ]
 }
