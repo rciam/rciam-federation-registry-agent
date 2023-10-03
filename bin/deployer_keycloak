@@ -19,6 +19,9 @@ jsonSamlTemplate = (
     '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"}}'
 )
 
+# Set Client Credentials Mapper JSON DATA
+clientCredentialsMapper = '{"name":"preferred_username","protocol":"openid-connect","protocolMapper":"oidc-usermodel-property-mapper","consentRequired":false,"config":{"userinfo.token.claim":"false","user.attribute":"username","id.token.claim":"false","access.token.claim":"true","claim.name":"preferred_username","introspection.response.claim":"false","jsonType.label":"String"}}'
+
 
 def map_token_endpoint_value(key):
     if key == "client_secret_post":
@@ -315,6 +318,8 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
                 external_id = response_external_id["response"]["id"]
         if protocol == "openid-connect":
             create_client_scopes(keycloak_agent, external_id, keycloak_msg)
+            if keycloak_msg["serviceAccountsEnabled"] == True:
+                keycloak_agent.add_mapper(client_id,json.loads(clientCredentialsMapper))
             if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
                 keycloak_agent.update_client_authz_permissions(external_id, "enable")
             if response["response"]["serviceAccountsEnabled"]:
@@ -333,6 +338,8 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
         external_id = response["response"]["id"]
         if protocol == "openid-connect":
             update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
+            if keycloak_msg["serviceAccountsEnabled"] == True:                    
+                keycloak_agent.add_mapper(client_id,json.loads(clientCredentialsMapper))                    
             if response["response"]["serviceAccountsEnabled"]:
                 update_service_account(
                     keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
