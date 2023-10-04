@@ -284,6 +284,7 @@ def add_saml_scopes_and_mappers(requested_attributes):
 # Update the optional client scopes of the client
 def update_service_account(agent, client_uuid, current_client_config, keycloak_config):
     service_account_profile = agent.get_service_account_user(client_uuid)
+    agent.add_mapper(client_uuid,json.loads(clientCredentialsMapper))
     agent.update_user(service_account_profile["response"], current_client_config, keycloak_config)
 
 
@@ -318,8 +319,6 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
                 external_id = response_external_id["response"]["id"]
         if protocol == "openid-connect":
             create_client_scopes(keycloak_agent, external_id, keycloak_msg)
-            if keycloak_msg["serviceAccountsEnabled"] == True:
-                keycloak_agent.add_mapper(client_id,json.loads(clientCredentialsMapper))
             if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
                 keycloak_agent.update_client_authz_permissions(external_id, "enable")
             if response["response"]["serviceAccountsEnabled"]:
@@ -338,8 +337,6 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
         external_id = response["response"]["id"]
         if protocol == "openid-connect":
             update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
-            if keycloak_msg["serviceAccountsEnabled"] == True:                    
-                keycloak_agent.add_mapper(client_id,json.loads(clientCredentialsMapper))                    
             if response["response"]["serviceAccountsEnabled"]:
                 update_service_account(
                     keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
