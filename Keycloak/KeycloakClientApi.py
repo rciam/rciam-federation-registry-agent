@@ -141,6 +141,23 @@ class KeycloakClientApi:
         return self.http_request("PUT", url, header, client_object)
 
     """
+    Create Custom Mapper
+
+    Parameters:
+        keycloak_id (str): The keycloak_id of the client
+        mapper (JSON Object): A JSON Object with the mapper
+    
+    Returns:
+        response (JSON Object): The status of the HTTP Response
+    """
+
+    def add_mapper(self,keycloak_id,mapper):
+        url = self.auth_url + "/admin/realms/" + self.realm + "/clients/" + str(keycloak_id) + "/protocol-mappers/models"
+        header = {"Authorization": "Bearer " + self.token}
+        return self.http_request("POST", url, header, mapper)
+        
+
+    """
     Get realm default client scopes
     
     Returns:
