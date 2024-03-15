@@ -84,7 +84,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
                 new_msg["attributes"]["use.jwks.url"] = True
                 new_msg["attributes"]["jwks.url"] = msg.pop("jwks_uri")
             if "refresh_token_validity_seconds" in msg:
-                new_msg["attributes"]["client.offline.session.idle.timeout"] = str(
+                new_msg["attributes"]["client.offline.session.max.lifespan"] = str(
                     msg["refresh_token_validity_seconds"]
                 )
                 if "reuse_refresh_token" in msg:
@@ -101,11 +101,6 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
                 new_msg["attributes"]["id.token.lifespan"] = str(msg.pop("id_token_timeout_seconds"))
             if "device_code_validity_seconds" in msg:
                 new_msg["attributes"]["oauth2.device.code.lifespan"] = str(msg.pop("device_code_validity_seconds"))
-            if (
-                new_msg["standardFlowEnabled"] == True
-                or new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] == True
-            ):
-                new_msg["consentRequired"] = True
         # Options for SAML clients
         elif msg["protocol"] == "saml":
             new_msg = json.loads(jsonSamlTemplate)
