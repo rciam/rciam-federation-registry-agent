@@ -22,7 +22,7 @@ pipeline {
                     pipenv run pytest -o junit_family=xunit2 --junitxml=junit.xml
                 '''
                 junit '**/junit.xml'
-                cobertura coberturaReportFile: '**/coverage.xml'
+                // cobertura coberturaReportFile: '**/coverage.xml'
             }
             post {
                 always {
