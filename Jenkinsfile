@@ -59,7 +59,7 @@ pipeline {
                                 cd ${WORKSPACE}/$PROJECT_DIR
                                 pipenv install --python 3 setuptools twine wheel
                                 pipenv run python3 setup.py sdist bdist_wheel
-                                pipenv run python3 -m twine upload --repository testpypi -u $USERNAME -p $PASSWORD dist/*
+                                pipenv run python3 -m twine upload --repository testpypi -u $USERNAME -p $PASSWORD --verbose dist/*
                             '''
                         }
                     }
