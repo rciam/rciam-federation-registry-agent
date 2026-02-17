@@ -22,7 +22,7 @@ pipeline {
                     pipenv run pytest -o junit_family=xunit2 --junitxml=junit.xml
                 '''
                 junit '**/junit.xml'
-                cobertura coberturaReportFile: '**/coverage.xml'
+                // cobertura coberturaReportFile: '**/coverage.xml'
             }
             post {
                 always {
@@ -59,7 +59,7 @@ pipeline {
                                 cd ${WORKSPACE}/$PROJECT_DIR
                                 pipenv install --python 3 setuptools twine wheel
                                 pipenv run python3 setup.py sdist bdist_wheel
-                                pipenv run python3 -m twine upload --repository testpypi -u $USERNAME -p $PASSWORD dist/*
+                                pipenv run python3 -m twine upload --repository testpypi -u $USERNAME -p $PASSWORD --verbose dist/*
                             '''
                         }
                     }

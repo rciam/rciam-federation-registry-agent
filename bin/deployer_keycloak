@@ -14,7 +14,7 @@ from Utils.oauth import client_credentials_grant, refresh_token_grant
 log = logging.getLogger(__name__)
 
 # Set default JSON Data
-jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","oauth2.token.exchange.grant.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"directAccessGrantsEnabled":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
+jsonOidcTemplate = '{"attributes":{"client_credentials.use_refresh_token":"false","oauth2.device.authorization.grant.enabled":"false","standard.token.exchange.enabled":false,"oidc.ciba.grant.enabled":"false","refresh.token.max.reuse":"0","revoke.refresh.token":"false","use.jwks.string":"false","use.jwks.url":"false","use.refresh.tokens":"false"},"directAccessGrantsEnabled":false,"implicitFlowEnabled":false,"publicClient":false,"serviceAccountsEnabled":false,"standardFlowEnabled":false,"webOrigins":["+"]}'
 jsonSamlTemplate = (
     '{"attributes":{"saml.auto.updated":"true","saml.refresh.period":"3600","saml.skip.requested.attributes": "true"}}'
 )
@@ -64,7 +64,7 @@ def format_keycloak_msg(msg, realm_default_client_scopes, keycloak_config):
                     if grant_type == "client_credentials":
                         new_msg["serviceAccountsEnabled"] = True
                     if grant_type == "urn:ietf:params:oauth:grant-type:token-exchange":
-                        new_msg["attributes"]["oauth2.token.exchange.grant.enabled"] = True
+                        new_msg["attributes"]["standard.token.exchange.enabled"] = True
                     if grant_type == "urn:ietf:params:oauth:grant-type:device_code":
                         new_msg["attributes"]["oauth2.device.authorization.grant.enabled"] = True
                     if grant_type == "implicit":
@@ -314,7 +314,7 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
                 external_id = response_external_id["response"]["id"]
         if protocol == "openid-connect":
             create_client_scopes(keycloak_agent, external_id, keycloak_msg)
-            if keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True:
+            if keycloak_msg["attributes"]["standard.token.exchange.enabled"] == True:
                 keycloak_agent.update_client_authz_permissions(external_id, "enable")
             if response["response"]["serviceAccountsEnabled"]:
                 update_service_account(
@@ -339,12 +339,12 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
             client_authz_permissions_response = keycloak_agent.get_client_authz_permissions(external_id)
             if (
                 client_authz_permissions_response["response"]["enabled"] == False
-                and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == True
+                and keycloak_msg["attributes"]["standard.token.exchange.enabled"] == True
             ):
                 keycloak_agent.update_client_authz_permissions(external_id, "enable")
             elif (
                 client_authz_permissions_response["response"]["enabled"] == True
-                and keycloak_msg["attributes"]["oauth2.token.exchange.grant.enabled"] == False
+                and keycloak_msg["attributes"]["standard.token.exchange.enabled"] == False
             ):
                 keycloak_agent.update_client_authz_permissions(external_id, "disable")
         if protocol == "saml":
