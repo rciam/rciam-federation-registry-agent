@@ -15,6 +15,11 @@ The main standalone deployment scripts are located under `bin/`:
 
 ---
 
+## [4.0.1] - 2026-02-19
+
+### Fixed
+- Removed deprecated update_client_authz_permission call for token exhange configuration.
+
 ## [4.0.0] - 2026-02-13
 
 ### Added

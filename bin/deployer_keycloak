@@ -314,8 +314,6 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
                 external_id = response_external_id["response"]["id"]
         if protocol == "openid-connect":
             create_client_scopes(keycloak_agent, external_id, keycloak_msg)
-            if keycloak_msg["attributes"]["standard.token.exchange.enabled"] == True:
-                keycloak_agent.update_client_authz_permissions(external_id, "enable")
             if response["response"]["serviceAccountsEnabled"]:
                 update_service_account(
                     keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
