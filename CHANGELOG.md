@@ -15,6 +15,12 @@ The main standalone deployment scripts are located under `bin/`:
 
 ---
 
+## [4.0.2] - 2026-02-24
+
+### Fixed
+- Removed depricated update_client_authz_permission calls in edit requests 
+
+
 ## [4.0.1] - 2026-02-19
 
 ### Fixed

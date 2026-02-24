@@ -334,17 +334,6 @@ def deploy_to_keycloak(registry_message, keycloak_agent, keycloak_config):
                 update_service_account(
                     keycloak_agent, external_id, response["response"], keycloak_config["service_account"]
                 )
-            client_authz_permissions_response = keycloak_agent.get_client_authz_permissions(external_id)
-            if (
-                client_authz_permissions_response["response"]["enabled"] == False
-                and keycloak_msg["attributes"]["standard.token.exchange.enabled"] == True
-            ):
-                keycloak_agent.update_client_authz_permissions(external_id, "enable")
-            elif (
-                client_authz_permissions_response["response"]["enabled"] == True
-                and keycloak_msg["attributes"]["standard.token.exchange.enabled"] == False
-            ):
-                keycloak_agent.update_client_authz_permissions(external_id, "disable")
         if protocol == "saml":
             update_client_scopes(keycloak_agent, external_id, keycloak_msg, response["response"])
     return response, external_id, client_id
