@@ -15,6 +15,12 @@ The main standalone deployment scripts are located under `bin/`:
 
 ---
 
+## [4.0.4] - 2026-03-20
+
+### Fixed
+
+- Fix attribute key for OpenID provider metadata.
+
 ## [4.0.3] - 2026-03-19
 
 ### Fixed
