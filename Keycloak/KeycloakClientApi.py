@@ -207,7 +207,7 @@ class KeycloakClientApi:
             "protocol": "openid-connect",
             "attributes": {
                 "include.in.token.scope": "true",
-                "include.from.openID.provider.metadata": "false",
+                "include.in.openid.provider.metadata": "false",
                 "display.on.consent.screen": "true",
             },
         }
