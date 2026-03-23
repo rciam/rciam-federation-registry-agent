@@ -15,15 +15,28 @@ The main standalone deployment scripts are located under `bin/`:
 
 ---
 
+## [4.0.4] - 2026-03-20
+
+### Fixed
+
+- Fix attribute key for OpenID provider metadata.
+
+## [4.0.3] - 2026-03-19
+
+### Fixed
+
+- Set include.in.openid.provider.metadata to false for new client scopes.
+
 ## [4.0.2] - 2026-02-24
 
 ### Fixed
-- Removed deprecated update_client_authz_permission calls in edit requests 
 
+- Removed deprecated update_client_authz_permission calls in edit requests
 
 ## [4.0.1] - 2026-02-19
 
 ### Fixed
+
 - Removed deprecated update_client_authz_permission call for token exhange configuration.
 
 ## [4.0.0] - 2026-02-13
