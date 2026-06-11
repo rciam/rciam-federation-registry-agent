@@ -36,7 +36,7 @@ class TestDeployerKeycloak(unittest.TestCase):
         out_service = {
             "attributes": {
                 "client_credentials.use_refresh_token": "false",
-                "contacts": "email1",
+                "contacts": "email1,email2",
                 "oauth2.device.authorization.grant.enabled": "false",
                 "standard.token.exchange.enabled": False,
                 "oidc.ciba.grant.enabled": "false",
@@ -313,7 +313,7 @@ class TestDeployerKeycloak(unittest.TestCase):
         }
         out_message = {
             "attributes": {
-                "contacts": "email1",
+                "contacts": "email1,email2",
                 "saml.auto.updated": "true",
                 "saml.metadata.url": "https://example.org/testSamlId/Shibboleth.sso/Metadata",
                 "saml.refresh.period": "3600",

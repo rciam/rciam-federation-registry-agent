@@ -35,7 +35,7 @@ class TestDeployerMitreid(unittest.TestCase):
             "clientId": "testId1",
             "clientName": "testName1",
             "clientDescription": "testDescription1",
-            "contacts": ["email1"],
+            "contacts": ["email1", "email2"],
         }
 
         func_result = deployer_mitreid.format_mitreid_msg(new_service, "create")

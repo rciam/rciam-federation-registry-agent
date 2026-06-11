@@ -15,6 +15,14 @@ The main standalone deployment scripts are located under `bin/`:
 
 ---
 
+## [4.1.0] - 2026-06-12
+
+
+### Changed
+
+- Removed hardcoded filtering of Technical and Support contacts from deployment processing.
+- Process all contacts received in deployment messages and rely on the Federation Registry for contact selection
+
 ## [4.0.4] - 2026-03-20
 
 ### Fixed
