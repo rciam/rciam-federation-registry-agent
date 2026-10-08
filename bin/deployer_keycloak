@@ -195,7 +195,7 @@ def publish_ams(pub_messages, ams_agent):
 # Create the optional client scopes of the client
 def create_client_scopes(agent, client_uuid, client_config):
     realm_client_scopes = agent.sync_realm_client_scopes()
-    new_optional_client_scopes = client_config["optionalClientScopes"]
+    new_optional_client_scopes = client_config.get("optionalClientScopes", [])
 
     # Custom scopes that are not created in Keycloak
     create_client_scopes = list(set(new_optional_client_scopes) - set(realm_client_scopes.keys()))

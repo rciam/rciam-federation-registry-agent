@@ -15,6 +15,12 @@ The main standalone deployment scripts are located under `bin/`:
 
 ---
 
+## [4.1.1] - 2026-10-08
+
+### Fixed
+
+- Allow Keycloak OIDC client creation when optional client scopes are omitted.
+
 ## [4.1.0] - 2026-06-12
 
 
